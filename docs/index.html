@@ -1,0 +1,1605 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>SNAP3D: Physically Grounded 3D Parts for Assembly from a Single Image</title>
+<!-- Drawn for this project (two parts bridged by a dovetail snap-fit), so
+     there is no third-party licence attached to it. -->
+<link rel="icon" href="favicon.ico" sizes="16x16 32x32 48x48">
+<link rel="icon" type="image/svg+xml" href="favicon.svg">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#6d4aff">
+<meta name="description" content="SNAP3D turns part-aware 3D generation into physically realizable assemblies: no interpenetration, real connectors, stable under gravity.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="SNAP3D: Physically Grounded 3D Parts for Assembly from a Single Image">
+<meta property="og:description" content="Part-aware 3D generation produces parts that look complete but interpenetrate, have no valid contact surfaces, and fall. SNAP3D makes them physically realizable.">
+<meta property="og:url" content="https://lucytuan.github.io/SNAP3D/">
+<meta property="og:image" content="https://lucytuan.github.io/SNAP3D/assets/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="SNAP3D: Physically Grounded 3D Parts for Assembly from a Single Image">
+<meta name="twitter:description" content="Part-aware 3D generation produces parts that look complete but interpenetrate, have no valid contact surfaces, and fall. SNAP3D makes them physically realizable.">
+<meta name="twitter:image" content="https://lucytuan.github.io/SNAP3D/assets/og.jpg">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{--ink:#191c24;--ink-2:#454b5c;--muted:#626879;--accent:#4a6cf7;--accent-2:#8a5cf6;
+      --accent-soft:#eef1ff;--line:#e6e2da;--card:#fff;--max-w:1180px;--max-w-narrow:820px;--max-w-wide:1560px;--paper:#fbfaf7;--radius:14px}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{background:var(--paper);color:var(--ink);line-height:1.7;font-size:17px;
+  font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility}
+.wrap.wide{max-width:var(--max-w-wide)}
+.wrap{max-width:var(--max-w);margin:0 auto;padding:0 22px}
+.navbar{position:relative;z-index:100;background:rgba(255,255,255,.9);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--line);transition:box-shadow .25s}
+.navbar.scrolled{box-shadow:0 2px 16px rgba(20,23,43,.07)}
+.nav-inner{max-width:min(1560px,100%);margin:0 auto;padding:11px 22px;display:flex;
+  align-items:center;justify-content:space-between;gap:14px}
+.nav-logo{font-size:.95em;font-weight:700;white-space:nowrap;flex:0 0 auto}
+.nav-links{display:flex;gap:0;flex-wrap:wrap;justify-content:flex-end}
+.nav-links a{font-size:.72em;color:var(--muted);text-decoration:none;padding:5px 7px;white-space:nowrap;
+  border-radius:7px;transition:all .15s}
+.nav-links a:hover{color:var(--accent);background:var(--accent-soft)}
+.banner{text-align:center;padding:78px 22px 60px;
+  background:radial-gradient(900px 380px at 20% 0,#eef1ff 0,rgba(238,241,255,0) 60%),
+             radial-gradient(900px 380px at 82% 6%,#f3edff 0,rgba(243,237,255,0) 58%),
+             linear-gradient(180deg,#fbfcff 0,#f5f7fc 100%)}
+.banner h1{font-weight:800;font-size:clamp(.95em,2.7vw,2.3em);line-height:1.2;letter-spacing:-.03em;
+  white-space:nowrap;max-width:none;margin:0 auto 20px}
+.badge{display:inline-block;padding:6px 17px;border-radius:999px;background:var(--ink);
+  color:#fff;font-size:.86em;font-weight:600;letter-spacing:.02em}
+section{padding:70px 0 58px}
+.tint{background:radial-gradient(1100px 420px at 12% -8%,#eef1ff 0,rgba(238,241,255,0) 62%),
+      linear-gradient(180deg,#fff 0,#f7f9fd 100%)}
+.tint2{background:radial-gradient(1100px 420px at 88% -6%,#f3edff 0,rgba(243,237,255,0) 60%),
+      linear-gradient(180deg,#fbfcff 0,#f6f8fc 100%)}
+.section-title{text-align:center;font-family:'Source Serif 4',Georgia,'Times New Roman',serif;font-size:clamp(28px,3.3vw,40px);font-weight:600;letter-spacing:-.018em;line-height:1.18;margin:0 auto 16px;color:var(--ink);text-wrap:balance}
+video.teaser{display:block;width:100%;max-width:960px;margin:0 auto 30px;border-radius:10px;
+  border:1px solid var(--line);background:#000}
+.sub
+.sub{text-align:center;color:var(--ink-2);max-width:var(--max-w-narrow);margin:0 auto 44px;font-size:1.02em;line-height:1.72}
+
+.bar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:16px;margin-bottom:20px}
+.bar>.tabs{grid-column:2}
+.bar>.seg{grid-column:3;justify-self:end}
+@media(max-width:860px){.bar{grid-template-columns:1fr;justify-items:center}
+  .bar>.tabs,.bar>.seg{grid-column:1}}
+.tabs{display:flex;gap:6px;justify-content:center;flex-wrap:wrap}
+.tab{font:inherit;font-size:.84em;padding:6px 14px;border-radius:999px;cursor:pointer;
+  border:1px solid var(--line);background:rgba(255,255,255,.8);color:var(--muted);transition:all .18s}
+.tab:hover{color:var(--accent);border-color:#c3ccff}
+.tab.on{background:var(--ink);border-color:var(--ink);color:#fff;font-weight:600}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden;background:#fff}
+.seg button{font:inherit;font-size:.82em;padding:6px 15px;border:0;background:transparent;
+  color:var(--muted);cursor:pointer;transition:all .18s}
+.seg button.on{background:var(--accent);color:#fff;font-weight:600}
+.track{display:grid;grid-template-columns:1fr;gap:22px;padding:6px 2px 10px}
+.track::-webkit-scrollbar{display:none}
+.slide{background:transparent;border:0;border-bottom:1px solid var(--line);
+  border-radius:0;padding:14px 4px 20px}
+.cap{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  padding-bottom:13px;margin-bottom:16px;border-bottom:1px solid var(--line)}
+.ttl{display:flex;align-items:center;gap:10px}
+.ttl h3{font-size:1.2em;font-weight:700}
+.cat{font-size:.72em;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--accent-2);background:#f4efff;padding:3px 10px;border-radius:999px}
+.meta{display:flex;gap:8px;flex-wrap:wrap}
+.pill{font-size:.76em;font-weight:600;padding:4px 11px;border-radius:999px;
+  background:var(--accent-soft);color:var(--accent)}
+.pill.ghost{background:transparent;color:var(--muted);border:1px solid var(--line);font-weight:500}
+.steps{display:grid;grid-template-columns:1fr 44px 1fr 44px 1fr;align-items:center;gap:4px}
+.step{margin:0}
+.shot{border-radius:13px;overflow:hidden;background:#f4f3f1;border:1px solid var(--line)}
+.shot.light{background:#fff}.shot.dark{background:#0e1020}
+.shot img,.shot video{width:100%;display:block;transition:transform .5s cubic-bezier(.2,.7,.3,1)}
+.steps .shot img,.steps .shot video{aspect-ratio:1/1;object-fit:cover}
+.row3 .shot img,.row3 .shot video{aspect-ratio:4/3;object-fit:contain}
+.row4 .shot img,.row4 .shot video{aspect-ratio:1/1;object-fit:cover}
+.steps,.row3,.row4{align-items:start}
+.topcap{display:flex;align-items:center;justify-content:center;gap:7px;white-space:nowrap;
+  padding-bottom:8px;font-size:.84em;color:var(--ink-2);font-weight:600}
+.colhead{display:flex;align-items:center;justify-content:center;gap:8px;
+  font-size:.86em;color:var(--ink-2);font-weight:600}
+.modnote{margin:0 0 14px}
+
+.step{display:flex;flex-direction:column}
+.step:hover .shot img{transform:scale(1.035)}
+figcaption{display:flex;align-items:center;justify-content:center;gap:8px;padding-top:11px;
+  font-size:.86em;color:var(--ink-2)}
+/* .rt-lbl is a flex row with nowrap text, so the badge was a flex item being
+   squeezed horizontally whenever the label ran wider than its 118px column:
+   a circle turned into an ellipse. It must never give up width. */
+.num{display:inline-grid;place-items:center;width:21px;height:21px;border-radius:50%;
+  flex:0 0 auto;aspect-ratio:1;
+  background:var(--ink);color:#fff;font-size:.72em;font-weight:700;font-variant-numeric:tabular-nums}
+.note{text-align:center;font-size:.78em;color:var(--muted);padding-top:3px}
+.arrow{display:grid;place-items:center;align-self:stretch;padding:0}
+.arrow span{position:relative;width:26px;height:2px;border-radius:2px;
+  background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+.arrow span::after{content:"";position:absolute;right:-1px;top:50%;width:8px;height:8px;
+  border-right:2px solid var(--accent-2);border-top:2px solid var(--accent-2);
+  transform:translateY(-50%) rotate(45deg);border-radius:1px}
+.row3{display:grid;grid-template-columns:.85fr 1.15fr 1.15fr;gap:16px;align-items:start}
+.row4{display:grid;grid-template-columns:1fr 1px repeat(4,1fr);gap:12px;align-items:start}
+.vrule{background:var(--line);width:1px;min-height:120px;justify-self:center;height:100%}
+.cell{margin:0}
+.cell.ours .shot{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.cell.ours figcaption,.cell.ours .topcap{color:var(--accent);font-weight:800}
+.nav{display:flex;align-items:center;justify-content:center;gap:16px;margin-top:22px}
+.arw{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:#fff;
+  cursor:pointer;color:var(--ink-2);font-size:1.05em;transition:all .18s}
+.arw:hover{border-color:var(--accent);color:var(--accent);transform:translateY(-1px)}
+.dots{display:flex;gap:7px}
+.dot{width:8px;height:8px;border-radius:50%;border:0;background:#cfd5e6;cursor:pointer;
+  padding:0;transition:all .25s}
+.dot.on{background:var(--accent);width:24px;border-radius:999px}
+.count{font-size:.85em;color:var(--muted);font-variant-numeric:tabular-nums;min-width:52px;text-align:center}
+.hint{text-align:center;font-size:.82em;color:var(--muted);margin-top:14px}
+.stagevid{margin:0;border-radius:20px;overflow:hidden;border:1px solid var(--line);
+  box-shadow:0 1px 2px rgba(20,23,43,.04),0 24px 56px -26px rgba(20,23,43,.4)}
+.stagevid video{width:100%;display:block;background:#0d1420}
+.stagevid figcaption{padding:11px;font-size:.85em;color:var(--ink-2);justify-content:center;background:#fff}
+.ablrow{background:#fff;border:1px solid var(--line);border-radius:20px;padding:18px 14px 22px;
+  margin-bottom:16px;box-shadow:0 1px 2px rgba(20,23,43,.04),0 18px 44px -22px rgba(20,23,43,.28)}
+.ablhead{justify-content:space-between;width:100%;display:flex;align-items:center;gap:10px;padding-bottom:12px;margin-bottom:14px;
+  border-bottom:1px solid var(--line)}
+.ablhead h3{font-size:1.15em;font-weight:700}
+.arow{display:grid;grid-template-columns:repeat(var(--nc,4),1fr);gap:10px}
+.acell{margin:0}
+.acell figcaption{white-space:nowrap}
+.acell video,.acell img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block}
+.acell .shot.light img{object-fit:contain;background:#fff}
+.acell .shot{border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+.acell.good .shot{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.acell.good figcaption{color:var(--accent);font-weight:700}
+.acell .note{text-align:center;font-size:.76em;color:var(--muted);padding-top:3px;line-height:1.45}
+@media (max-width:900px){.arow{grid-template-columns:1fr 1fr}}
+.fabwrap{display:grid;grid-template-columns:1.35fr 1fr;gap:22px;align-items:start}
+.fabcol{display:flex;flex-direction:column;gap:14px}
+.fabvid{margin:0;background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;
+  box-shadow:0 1px 2px rgba(20,23,43,.04),0 18px 44px -22px rgba(20,23,43,.28)}
+.fabvid video{width:100%;display:block;background:#eceff4}
+.fabvid figcaption{padding:10px;font-size:.86em;color:var(--ink-2);justify-content:center}
+.fabgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fabcell{margin:0;background:#fff;border:1px solid var(--line);border-radius:13px;overflow:hidden}
+.fabcell img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block}
+.fabcell figcaption{padding:7px;font-size:.78em;color:var(--muted);justify-content:center}
+@media (max-width:900px){.fabwrap{grid-template-columns:1fr}}
+.pending{display:grid;place-items:center;min-height:210px;border:1px dashed #cbd3e4;
+  border-radius:18px;background:repeating-linear-gradient(45deg,#fbfcff,#fbfcff 12px,#f4f6fb 12px,#f4f6fb 24px)}
+.pending span{font-size:.9em;color:var(--muted);letter-spacing:.02em}
+footer{text-align:center;padding:34px 22px;color:var(--muted);font-size:.88em;border-top:1px solid var(--line)}
+@media (max-width:900px){
+  .steps{grid-template-columns:1fr}.arrow{padding:6px 0}.arrow span{transform:rotate(90deg)}
+  .row3{grid-template-columns:1fr}.row4{grid-template-columns:1fr 1fr}.vrule{display:none}
+  .slide{padding:18px}
+}
+@media (prefers-reduced-motion:reduce){.track{scroll-behavior:auto}.shot img{transition:none}}
+
+/* Scroll-driven opening, following the reference page: a tall section pins a
+   full-viewport teaser; scrolling writes --hero-enter-progress (0 -> 1) so the
+   video dims, the scrim darkens, and the title fades and rises in. */
+.hero-section{--hero-enter-progress:0;position:relative;min-height:100vh;background:#05080c;padding:0}
+.hero-sticky{position:relative;height:100vh;min-height:560px;display:flex;
+  align-items:center;justify-content:center;overflow:hidden}
+.hero-video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:0;
+  opacity:calc(1 - var(--hero-enter-progress) * .32)}
+.hero-scrim{position:absolute;inset:0;z-index:1;
+  opacity:calc(.72 + var(--hero-enter-progress) * .2);background:
+  linear-gradient(180deg,rgba(9,12,18,.55) 0%,rgba(9,12,18,.72) 42%,rgba(9,12,18,.88) 100%),
+  radial-gradient(78% 58% at 50% 52%,rgba(9,12,18,.78) 0%,rgba(9,12,18,.10) 100%)}
+.hero-content{position:relative;z-index:2;width:min(1100px,calc(100% - 48px));
+  padding:96px 0 64px;text-align:center;color:#fff;
+  opacity:1;transform:none}
+.hero-section.is-static .hero-content{opacity:1;transform:none}
+.hero-section.is-static .hero-scrim{opacity:.7}
+.hero-section.is-static .hero-video{opacity:1}
+.hero-content .eyebrow{display:inline-block;margin:0 0 16px;font-size:.78em;font-weight:700;
+  letter-spacing:.2em;text-transform:uppercase;color:#cfd8e8}
+.hero-content h1{margin:0;font-size:clamp(30px,4.6vw,62px);font-weight:700;
+  line-height:1.06;letter-spacing:-.02em;text-wrap:balance}
+.hero-summary{max-width:820px;margin:26px auto 0;font-size:clamp(14px,1.25vw,17.5px);
+  line-height:1.6;color:#dfe5ef}
+@media (max-width:700px){.hero-sticky{min-height:480px}.hero-content{padding:64px 0 48px}}
+.tabs{display:none}
+.bar:not(:has(.seg)){display:none}
+
+/* the panel labels are the table's header row: keep them on the first sample
+   only, so every column is named once and the rows below stay clean */
+.track{gap:0}
+.slide:not(:first-child) .topcap{display:none}
+.slide:last-child{border-bottom:0}
+.cap{padding-bottom:8px;margin-bottom:10px}
+.cap h3{font-size:1em}
+
+/* Real-world assemblies transposed: three stage rows, one column per sample */
+.restable{display:grid;grid-template-columns:auto repeat(var(--n),1fr);
+  gap:8px 10px;align-items:center;margin-top:6px}
+.rt-h{text-align:center;padding:0 2px 6px;border-bottom:1px solid var(--line);
+  display:flex;flex-direction:column;gap:4px;align-items:center}
+.rt-h .nm{font-weight:600;font-size:.86em;line-height:1.25}
+.rt-h .pill{font-size:.66em}
+.rt-lbl{font-size:.8em;font-weight:600;color:var(--ink-2);white-space:nowrap;
+  padding-right:8px;display:flex;align-items:center;gap:7px}
+.rt-corner{border-bottom:1px solid var(--line)}
+.rt-c img{width:100%;aspect-ratio:1;object-fit:cover;display:block;
+  border-radius:10px;border:1px solid var(--line);background:#fff}
+.rtwrap{max-width:var(--max-w);margin:0 auto;padding:0 22px 8px;overflow-x:auto}
+.restable{min-width:760px}
+.galtable{min-width:calc(var(--n) * 132px + 120px)}
+.restable .rt-lbl{position:sticky;left:0;z-index:1;padding-right:10px;
+  background:linear-gradient(90deg,var(--card,#fff) 78%,rgba(255,255,255,0))}
+
+/* comparison: two groups side by side, three samples each, five panels per sample */
+.cwrap{display:grid;grid-template-columns:1fr 1fr;gap:26px;max-width:1560px;
+  margin:0 auto;padding:0 22px 8px;overflow-x:auto}
+.cgrid{display:grid;grid-template-columns:auto repeat(5,1fr);gap:6px 7px;
+  align-items:center;min-width:620px}
+.cg-h{text-align:center;font-size:.72em;font-weight:600;color:var(--ink-2);
+  padding-bottom:6px;border-bottom:1px solid var(--line)}
+.cg-h.ours{color:var(--accent);font-weight:700}
+.cg-corner{border-bottom:1px solid var(--line)}
+.cg-lbl{font-size:.74em;font-weight:600;color:var(--ink-2);white-space:nowrap;padding-right:6px}
+.cg-c img{width:100%;aspect-ratio:1;object-fit:cover;display:block;border-radius:8px;
+  border:1px solid var(--line);background:#fff}
+.cg-c.ours img{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent-soft)}
+.cg-none{aspect-ratio:1;display:flex;align-items:center;justify-content:center;
+  border:1px dashed var(--line);border-radius:8px;font-size:.68em;color:var(--muted)}
+@media (max-width:1100px){.cwrap{grid-template-columns:1fr}}
+.fabrow{display:grid;grid-template-columns:1fr 1fr;gap:16px;max-width:var(--max-w);
+  margin:0 auto 18px;padding:0 22px}
+.fabrow video{width:100%;display:block;border-radius:12px;border:1px solid var(--line)}
+@media (max-width:800px){.fabrow{grid-template-columns:1fr}}
+
+/* ------- public build: one continuous page, one cell system ------------- */
+/* sections are separated by rhythm and a hairline, not by a colour change */
+section{padding:92px 0 84px;position:relative}
+section + section::before{content:"";position:absolute;top:0;left:50%;
+  transform:translateX(-50%);width:min(var(--max-w),calc(100% - 44px));
+  height:1px;background:var(--line)}
+#top + section::before{display:none}
+
+/* every panel in every table looks the same: same crop, radius, border, ground */
+.rt-c img,.cg-c img,.acell img,.acell video{
+  aspect-ratio:1;object-fit:cover;border-radius:10px;
+  border:1px solid var(--line);background:#fff}
+.acell .shot{border:0;border-radius:0;overflow:visible}
+.acell .shot.light img{object-fit:contain}
+
+/* one label voice for row labels, column heads and per-cell captions */
+.rt-lbl,.cg-lbl,.rt-h .nm,.cg-h,.topcap{
+  font-size:.75em;font-weight:600;letter-spacing:.01em;color:var(--ink-2)}
+.cg-h.ours,.acell.good figcaption{color:var(--accent);font-weight:700}
+
+/* the eyebrow ties each section to its place in the argument */
+.eyebrow-n{display:block;text-align:center;font-size:.68em;font-weight:600;
+  letter-spacing:.2em;text-transform:uppercase;color:var(--accent);margin-bottom:14px;
+  font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace}
+.section-title{margin-top:0}
+.hero-gap{max-width:860px;margin:26px auto 0;font-size:clamp(16px,1.6vw,22px);
+  line-height:1.45;font-weight:600;color:#fff;text-wrap:balance}
+.hero-summary{margin-top:14px}
+
+/* one object, one failure, before the table of eight */
+.failbox{display:grid;grid-template-columns:minmax(0,1fr) 40px minmax(0,1.35fr);
+  gap:0 14px;align-items:start;max-width:1040px;margin:0 auto 34px;padding:0 22px}
+.failcell{margin:0}
+.failcell img{width:100%;aspect-ratio:4/3;object-fit:contain;border-radius:12px;
+  border:1px solid var(--line);background:#fff;display:block}
+.failcell.wide img{aspect-ratio:4/3}
+.failcell figcaption{display:block;text-align:left;padding-top:9px;font-size:.82em;line-height:1.5;color:var(--ink-2)}
+.failcell.wide figcaption{max-width:52ch}
+.failarrow{display:flex;align-items:center;justify-content:center;align-self:start;
+  height:calc(100% - 3.2em);min-height:120px;color:var(--muted)}
+.failarrow span{display:block;width:26px;height:1px;background:currentColor;position:relative}
+.failarrow span::after{content:"";position:absolute;right:0;top:-3px;
+  border:3px solid transparent;border-left-color:currentColor}
+@media (max-width:820px){.failbox{grid-template-columns:1fr}.failarrow{display:none}}
+
+/* interactive exploded view */
+.exwrap{max-width:1560px;margin:0 auto 30px;padding:0 22px}
+.ex-bar{display:flex;align-items:center;justify-content:space-between;gap:18px;
+  flex-wrap:wrap;margin-bottom:14px}
+.ex-tabs{display:flex;gap:3px;flex-wrap:wrap}
+.ex-tab{font:inherit;font-size:.8em;padding:7px 14px;border:1px solid var(--line);
+  background:#fff;border-radius:999px;color:var(--muted);cursor:pointer;transition:all .15s}
+.ex-tab:hover{color:var(--ink-2)}
+.ex-tab.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.ex-ctl{display:flex;align-items:center;gap:12px}
+.ex-slide{display:flex;align-items:center;gap:11px;font-size:.76em;color:var(--muted);white-space:nowrap}
+.ex-slide input{width:260px;accent-color:var(--accent)}
+.ex-reset{font:inherit;font-size:.76em;padding:6px 14px;border:1px solid var(--line);
+  background:#fff;border-radius:999px;color:var(--muted);cursor:pointer}
+.ex-reset:hover{color:var(--ink-2);border-color:var(--ink-2)}
+.ex-stage{width:100%;height:min(68vh,660px);border:1px solid var(--line);
+  border-radius:16px;background:#f5f7fb;overflow:hidden}
+.ex-stage canvas{display:block;width:100%;height:100%}
+.ex-chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:12px}
+.ex-chip{display:inline-flex;align-items:center;gap:6px;font-size:.7em;color:var(--ink-2);
+  padding:3px 10px 3px 7px;border:1px solid var(--line);border-radius:999px;
+  background:#fff;cursor:default;transition:all .12s}
+.ex-chip::before{content:"";width:9px;height:9px;border-radius:3px;background:var(--c)}
+.ex-chip:hover{border-color:var(--ink-2);color:var(--ink)}
+.ex-note{text-align:center;font-size:.78em;color:var(--muted);margin:10px 0 0}
+@media (max-width:900px){.ex-slide input{width:150px}.ex-stage{height:52vh}}
+
+/* the comparison panels hold still until the reader starts the drop */
+.simbar{display:flex;align-items:center;gap:14px;flex-wrap:wrap;justify-content:center;
+  max-width:1000px;margin:0 auto 18px;padding:0 22px}
+.simbtn{font:inherit;font-size:.84em;font-weight:600;display:inline-flex;align-items:center;
+  gap:9px;padding:9px 18px;border:1px solid var(--accent);border-radius:999px;
+  background:var(--accent);color:#fff;cursor:pointer;transition:all .16s}
+.simbtn:hover{filter:brightness(1.06)}
+.simbtn.on{background:#fff;color:var(--accent)}
+.simdot{width:8px;height:8px;border-radius:50%;background:currentColor;
+  box-shadow:0 0 0 0 currentColor;animation:simpulse 1.9s infinite}
+.simbtn.on .simdot{animation:none}
+@keyframes simpulse{0%{box-shadow:0 0 0 0 rgba(255,255,255,.7)}
+  70%{box-shadow:0 0 0 7px rgba(255,255,255,0)}100%{box-shadow:0 0 0 0 rgba(255,255,255,0)}}
+.simhint{font-size:.76em;color:var(--muted);max-width:52ch;line-height:1.5}
+@media (prefers-reduced-motion:reduce){.simdot{animation:none}}
+
+/* TL;DR is the first line anyone reads, so it gets its own measure and rhythm */
+.tldr{max-width:none;margin:6px auto 40px;text-align:center !important;
+  /* one line: size follows the viewport so the sentence never wraps on desktop */
+  font-size:clamp(16px,1.78vw,30px);line-height:1.36;letter-spacing:-.012em;
+  white-space:nowrap;color:var(--ink);font-weight:600}
+@media (max-width:820px){.tldr{white-space:normal;font-size:19px;max-width:38ch}}
+.tldr .tl{display:inline;margin:0 .5em 0 0;font-size:1em;font-weight:800;
+  letter-spacing:.01em;color:var(--accent)}
+
+/* the three panels are one row of equal boxes, captions on a second row, so the
+   arrows can sit exactly halfway up the images instead of guessing with padding */
+.chain{display:grid;grid-template-columns:1fr 112px 1fr 112px 1fr;
+  grid-template-rows:auto auto;gap:12px 10px;max-width:1280px;margin:0 auto;padding:0 22px}
+.ch-step{margin:0;grid-row:1}
+.ch-step img{width:100%;aspect-ratio:4/3;object-fit:contain;background:#fff;display:block;
+  border:1px solid var(--line);border-radius:12px}
+.ch-arrow{grid-row:1;align-self:center;display:flex;flex-direction:column;
+  align-items:center;gap:9px;color:var(--ink-2)}
+.ch-arrow span{display:block;width:100%;height:2.5px;background:currentColor;
+  border-radius:2px;position:relative}
+.ch-arrow span::after{content:"";position:absolute;right:-1px;top:-5px;
+  border:6px solid transparent;border-left-color:currentColor;border-left-width:9px}
+.ch-arrow em{font-style:normal;font-size:.86em;font-weight:600;text-align:center;
+  line-height:1.3;letter-spacing:.01em}
+.ch-cap{grid-row:2;margin:0;text-align:center;font-size:.82em;line-height:1.5;
+  color:var(--ink-2);align-self:start}
+.ch-cap .red{color:#d92b2b;font-weight:700}
+.chain i{grid-row:2}
+@media (max-width:900px){.chain{grid-template-columns:1fr}
+  .ch-step,.ch-arrow,.ch-cap{grid-row:auto}.chain i{display:none}
+  .ch-arrow{flex-direction:row;gap:12px}.ch-arrow span{width:52px}}
+
+/* the problem, stated once, right under the one-line summary */
+.motiv{max-width:66ch;margin:0 auto 26px;padding:0 22px;text-align:center}
+.motiv-t{margin:0 0 9px;font-size:1.22em;font-weight:700;letter-spacing:-.01em;color:#c0392b}
+.motiv-p{margin:0;font-size:.95em;line-height:1.62;color:var(--ink-2)}
+
+/* the paper's overview figure, given the full column so the three stages stay legible */
+.method{max-width:1560px;margin:46px auto 0;padding:0 22px}
+.method-t{margin:0 0 9px;font-size:1.22em;font-weight:700;letter-spacing:-.01em;
+  text-align:center;color:var(--ink)}
+.method-p{max-width:66ch;margin:0 auto 20px;text-align:center;font-size:.95em;
+  line-height:1.62;color:var(--ink-2)}
+.method-fig{margin:0}
+.method-fig img{width:100%;display:block;border:1px solid var(--line);border-radius:12px;
+  background:#fff}
+.method-fig figcaption{display:block;max-width:96ch;margin:12px auto 0;text-align:center;
+  font-size:.8em;line-height:1.55;color:var(--muted)}
+
+/* headings and figure text follow the same pair as the section titles */
+.motiv-t,.method-t{font-family:'Source Serif 4',Georgia,serif;font-weight:600;
+  font-size:clamp(21px,2.1vw,27px);letter-spacing:-.012em}
+.motiv-p,.method-p{font-size:1.0em;line-height:1.72}
+.motiv{margin-bottom:38px}
+.method{margin-top:64px}
+.sid,.ex-chip,.rt-lbl,.cg-lbl{font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace}
+.rt-lbl,.cg-lbl{font-size:.72em;letter-spacing:.02em}
+figcaption,.ch-cap,.note,.ex-note,.method-fig figcaption{line-height:1.62}
+.hero-content h1{font-family:'Source Serif 4',Georgia,serif;font-weight:600;letter-spacing:-.02em}
+.tldr{font-family:'Source Serif 4',Georgia,serif;font-weight:600}
+
+/* second pass: the grids were still packed tighter than the references */
+.cgrid{gap:14px 12px}
+.cwrap{gap:40px}
+.restable{gap:14px 12px}
+.cg-c img,.rt-c img{border-radius:var(--radius)}
+.ch-step img,.method-fig img,.failcell img{border-radius:var(--radius)}
+.cg-h,.rt-h .nm{font-size:.78em}
+.rt-h,.cg-h{padding-bottom:10px}
+.simbar{flex-direction:column;gap:10px;margin-bottom:34px}
+.simhint{text-align:center;max-width:62ch}
+.slide{padding:22px 4px 30px}
+.ex-stage{border-radius:var(--radius)}
+.exwrap{margin-bottom:40px}
+.rtwrap{padding-bottom:14px}
+.stagevid video,.fabrow video{border-radius:var(--radius)}
+.nav-links a{font-size:.74em}
+.nav-logo{font-family:'Source Serif 4',Georgia,serif;font-weight:600;font-size:1.02em}
+
+/* ---------------------------------------------------------------------------
+   Layout pass. The reference pages centre almost nothing: cubepart uses
+   text-align:center four times, lift4d once, we were using it twenty-one times.
+   Centred headings + centred ledes + centred captions on every block is the
+   thing that reads as generated. Content is left aligned against the column
+   from here on; only the hero stays centred, which is the convention.
+   --------------------------------------------------------------------------- */
+.shead{max-width:var(--max-w);margin:0 auto 30px;padding:0 22px;
+  display:grid;grid-template-columns:auto 1fr;gap:4px 18px;align-items:baseline}
+.snum{grid-row:1;font-family:'IBM Plex Mono',ui-monospace,monospace;font-size:.82em;
+  font-weight:500;color:var(--rule);padding-top:.35em}
+.shead .section-title{grid-row:1;text-align:left;margin:0;max-width:24ch}
+.slab{grid-column:2;grid-row:2;font-family:'IBM Plex Mono',ui-monospace,monospace;
+  font-size:.72em;letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.sub{text-align:left;max-width:74ch;margin:0 0 40px;padding:0 22px;font-size:1.03em}
+section > .wrap > .sub,section > .sub{margin-left:auto;margin-right:auto;
+  max-width:calc(var(--max-w) - 0px)}
+.sub{margin-left:auto;margin-right:auto;max-width:var(--max-w)}
+.sub > *{max-width:74ch}
+figcaption,.ch-cap,.rt-lbl,.note{text-align:left}
+.ch-cap{text-align:left}
+.motiv,.method-p,.method-t,.motiv-t{text-align:left}
+.motiv{max-width:var(--max-w);margin:0 auto 34px}
+.method-p{max-width:74ch;margin:0 0 22px}
+.method-t,.motiv-t{margin-left:0}
+.method{max-width:var(--max-w-wide)}
+.method-fig figcaption{text-align:left;max-width:96ch;margin:14px 0 0}
+.stagevid figcaption,.fabvid figcaption,.fabcell figcaption{justify-content:flex-start}
+
+/* a quieter palette: one ink family, the accent reserved for links and "Ours" */
+:root{--rule:#b9b3a6;--accent:#2f5d50;--accent-soft:#e8efec}
+.snum{color:var(--accent)}
+.simbtn{border-radius:6px;background:var(--ink);border-color:var(--ink)}
+.simbtn.on{background:transparent;color:var(--ink)}
+.ex-tab,.ex-reset{border-radius:6px}
+.ex-tab.on{background:var(--ink);border-color:var(--ink)}
+.seg{border-radius:6px}
+.seg button.on{background:var(--ink)}
+.pill{border-radius:5px}
+
+/* the sticky nav was covering the top of a section when you jump to it */
+section{scroll-margin-top:72px}
+/* controls belong on the same left edge as the text, not floating centred */
+.simbar{align-items:flex-start;justify-content:flex-start;flex-direction:row;
+  max-width:var(--max-w-wide);margin:0 auto 34px;gap:18px;padding:0 22px}
+.simhint{text-align:left;max-width:56ch}
+.ex-bar{max-width:none}
+.ex-note{text-align:left;padding-left:2px}
+.ex-chips{justify-content:flex-start}
+.method-fig figcaption,.ch-cap{color:var(--muted)}
+/* figure captions read as captions, not body copy */
+figcaption,.ch-cap,.note,.ex-note{font-size:.8em}
+
+/* hero credit block and action row, the standard project-page anatomy */
+.authors{display:flex;flex-wrap:wrap;justify-content:center;gap:2px 22px;margin:22px auto 6px;
+  max-width:900px}
+.authors a{color:#fff;font-size:.94em;font-weight:500;text-decoration:none}
+.affil{color:#d7dde8;font-size:.86em;margin-bottom:22px}
+.actions{display:flex;flex-wrap:wrap;justify-content:center;gap:10px}
+.act{display:inline-flex;align-items:center;gap:8px;padding:9px 17px;border-radius:6px;
+  border:1px solid rgba(255,255,255,.34);color:#fff;font-size:.84em;font-weight:500;
+  text-decoration:none;transition:all .16s}
+.act:hover{background:rgba(255,255,255,.12)}
+.act svg{width:15px;height:15px;fill:none;stroke:currentColor;stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round}
+.act.soon{opacity:.62;cursor:default}
+.act em{font-style:normal;font-size:.78em;letter-spacing:.06em;text-transform:uppercase;
+  padding:1px 6px;border-radius:4px;background:rgba(255,255,255,.18)}
+
+/* BibTeX */
+.bibwrap{position:relative;max-width:var(--max-w);margin:0 auto;padding:0 22px}
+#bibtex-body{margin:0;padding:20px 22px;border:1px solid var(--line);border-radius:var(--radius);
+  background:#14171f;color:#e8ecf5;overflow-x:auto;
+  font-family:'IBM Plex Mono',ui-monospace,Menlo,monospace;font-size:.8em;line-height:1.65}
+.bibcopy{position:absolute;top:12px;right:34px;font:inherit;font-size:.74em;padding:5px 12px;
+  border:1px solid rgba(255,255,255,.3);border-radius:6px;background:transparent;
+  color:#c8cfdd;cursor:pointer}
+.bibcopy:hover{background:rgba(255,255,255,.12);color:#fff}
+
+/* ---------------------------------------------------------------------------
+   Readability pass, from measured values rather than taste:
+     .sub ran 130 characters per line, .motiv-p 128, figcaption 127, .ex-note 205.
+       Comfortable prose is 60-75. Two of my own rules were fighting: a 74ch cap
+       followed by max-width:var(--max-w), and the later one won.
+     Seven text styles sat at 12.2-12.9px, below what is comfortable at arm's length.
+     Six sat at 3.94:1 contrast, under the 4.5:1 needed at those sizes.
+   --------------------------------------------------------------------------- */
+.sub{max-width:70ch;margin:0 auto 44px;padding:0 22px;font-size:1.05em;line-height:1.72}
+.sub > *{max-width:none}
+.motiv-p,.method-p{max-width:70ch;font-size:1.02em;line-height:1.75}
+.method-fig figcaption,figcaption,.ch-cap{max-width:74ch;font-size:.86em;line-height:1.68;
+  color:var(--muted)}
+.ex-note{max-width:74ch;font-size:.86em}
+.simhint{font-size:.86em;max-width:52ch;line-height:1.62}
+.note{font-size:.85em;line-height:1.6}
+.rt-lbl,.cg-lbl{font-size:.82em;letter-spacing:.01em}
+.cg-h,.rt-h .nm{font-size:.86em}
+.slab{font-size:.78em;letter-spacing:.12em}
+.nav-links a{font-size:.82em}
+.pill{font-size:.8em}
+.ex-tab,.ex-reset,.ex-slide,.seg button{font-size:.86em}
+
+/* the .sub was still 127ch: an earlier rule set max-width to the full column and
+   won on source order, so the cap has to be the last word on it */
+.sub{max-width:70ch !important;margin-left:auto;margin-right:auto}
+.slab{max-width:none;width:auto;justify-self:start}
+figcaption,.ex-note{max-width:70ch}
+.note{font-size:.86em}
+.actions{margin-bottom:6px}
+
+/* last two: a figcaption inside a wide figure ignored the cap, and .note was
+   still being set to .85em by an earlier rule that won on source order */
+.method-fig figcaption,.fabvid figcaption,.stagevid figcaption,figcaption{max-width:70ch}
+.note,.acell .note,.modnote{font-size:.88em !important}
+
+/* the last three: step numerals in figure captions, the part-count pills, and the
+   BibTeX copy button were all still under 13px and under 4.5:1 */
+.num{font-size:1em !important;width:1.55em;height:1.55em;color:#fff;background:var(--ink)}
+.pill{font-size:.86em !important;color:var(--ink-2);background:#efece5;border-color:transparent}
+.pill.ghost{background:transparent;border:1px solid var(--line)}
+.bibcopy{font-size:.84em;color:#e2e7f0;border-color:rgba(255,255,255,.42)}
+.seg button{color:var(--ink-2)}
+
+/* the paper's TL;DR sentence is 150 characters; forcing it onto one line pushed
+   it off the right edge, so it wraps and keeps a readable measure instead */
+.tldr{white-space:normal !important;max-width:56ch !important;
+  font-size:clamp(19px,1.9vw,27px) !important;line-height:1.42 !important;
+  text-align:center !important;margin:6px auto 40px !important}
+@media (max-width:820px){.tldr{font-size:19px !important;max-width:40ch !important}}
+
+/* ---------------------------------------------------------------------------
+   Palette. The warm cream ground and muted green read as a default template;
+   this is a colder, higher-contrast system with a single saturated accent and
+   layered shadows, and it carries a full dark theme that follows the OS unless
+   the reader overrides it.
+   --------------------------------------------------------------------------- */
+:root{
+  --paper:#ffffff; --panel:#f6f7f9; --ink:#0d1117; --ink-2:#39414f; --muted:#5c6675;
+  --line:#e4e7ec; --rule:#c3cad4; --accent:#1f6feb; --accent-soft:rgba(31,111,235,.10);
+  --shadow:0 1px 2px rgba(13,17,23,.05),0 8px 26px -12px rgba(13,17,23,.22);
+  --shadow-lg:0 2px 4px rgba(13,17,23,.05),0 26px 64px -28px rgba(13,17,23,.34);
+}
+:root[data-theme="dark"]{
+  --paper:#0c1016; --panel:#141a22; --ink:#eef2f7; --ink-2:#c0c8d4; --muted:#9aa4b2;
+  --line:#222a35; --rule:#3a4553; --accent:#5b9dff; --accent-soft:rgba(91,157,255,.14);
+  --shadow:0 1px 2px rgba(0,0,0,.5),0 10px 30px -14px rgba(0,0,0,.7);
+  --shadow-lg:0 2px 6px rgba(0,0,0,.55),0 30px 70px -30px rgba(0,0,0,.85);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#0c1016; --panel:#141a22; --ink:#eef2f7; --ink-2:#c0c8d4; --muted:#9aa4b2;
+    --line:#222a35; --rule:#3a4553; --accent:#5b9dff; --accent-soft:rgba(91,157,255,.14);
+    --shadow:0 1px 2px rgba(0,0,0,.5),0 10px 30px -14px rgba(0,0,0,.7);
+    --shadow-lg:0 2px 6px rgba(0,0,0,.55),0 30px 70px -30px rgba(0,0,0,.85);
+  }
+}
+body{background:var(--paper);color:var(--ink)}
+.navbar{background:color-mix(in srgb,var(--paper) 88%,transparent);border-bottom:1px solid var(--line)}
+.card,.slide{background:var(--panel)}
+.rt-c img,.cg-c img,.ch-step img,.method-fig img,.ex-stage,.failcell img{
+  background:var(--panel);border-color:var(--line);box-shadow:var(--shadow)}
+#bibtex-body{background:#0b1017;border-color:var(--line)}
+.simbtn{background:var(--accent);border-color:var(--accent);color:#fff}
+.simbtn.on{background:transparent;color:var(--accent)}
+.ex-tab.on{background:var(--accent);border-color:var(--accent)}
+.seg button.on{background:var(--accent)}
+.snum{color:var(--accent)}
+.ex-tab,.ex-reset,.seg,.pill{background:var(--panel);color:var(--ink-2);border-color:var(--line)}
+
+/* nav controls */
+.nav-inner{gap:12px}
+.iconbtn{flex:0 0 auto;display:inline-flex;align-items:center;justify-content:center;
+  width:34px;height:34px;border:1px solid var(--line);border-radius:9px;background:var(--panel);
+  color:var(--ink-2);cursor:pointer;transition:all .15s}
+.iconbtn:hover{color:var(--accent);border-color:var(--accent)}
+.iconbtn svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:1.9;
+  stroke-linecap:round;stroke-linejoin:round}
+.i-moon{display:none}
+:root[data-theme="dark"] .i-sun{display:none}
+:root[data-theme="dark"] .i-moon{display:block}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .i-sun{display:none}
+  :root:not([data-theme="light"]) .i-moon{display:block}}
+
+.totop{position:fixed;right:26px;bottom:26px;z-index:90;width:44px;height:44px;
+  display:flex;align-items:center;justify-content:center;border-radius:50%;
+  border:1px solid var(--line);background:var(--panel);color:var(--ink-2);cursor:pointer;
+  box-shadow:var(--shadow);opacity:0;pointer-events:none;transform:translateY(8px);
+  transition:opacity .2s,transform .2s}
+.totop.on{opacity:1;pointer-events:auto;transform:none}
+.totop:hover{color:var(--accent);border-color:var(--accent)}
+.totop svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.1;
+  stroke-linecap:round;stroke-linejoin:round}
+
+/* arrows as svg: the css-border arrowhead was what looked broken */
+.ch-arrow svg{width:100%;height:12px;overflow:visible;stroke:var(--rule);stroke-width:1.8;
+  fill:none;stroke-linecap:round;stroke-linejoin:round}
+.ch-arrow em{color:var(--muted)}
+
+/* 4. headings and ledes centred again */
+.shead{justify-content:center;text-align:center;grid-template-columns:auto auto;
+  justify-items:center;gap:0 14px}
+.shead .section-title{text-align:center;max-width:26ch}
+.sub{text-align:center !important;max-width:66ch !important}
+.motiv,.motiv-t,.motiv-p,.method-t,.method-p{text-align:center}
+.motiv-p,.method-p{margin-left:auto;margin-right:auto}
+.ch-cap{text-align:center}
+.method-fig figcaption{text-align:center;margin-left:auto;margin-right:auto}
+
+/* 8. the Ours row has to be unmissable */
+.cmptable .rt-lbl.ours{color:var(--accent);font-weight:700}
+.cmptable .rt-c.ours img{border:2px solid var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+.cmptable .rt-lbl{white-space:nowrap}
+.cmptable{min-width:calc(var(--n) * 128px + 130px)}
+
+/* the sticky row label kept a hard-coded white gradient, which showed as a white
+   slab on the dark theme */
+.restable .rt-lbl{background:linear-gradient(90deg,var(--paper) 78%,transparent)}
+.rt-h,.cg-h,.rt-corner{border-bottom-color:var(--line)}
+#bibtex-body{color:#e8ecf5}
+.hero-section{background:#05080c}
+footer{color:var(--muted);border-top:1px solid var(--line)}
+
+/* ---------------------------------------------------------------------------
+   4. Palette: near-black ground with a violet accent, the restrained treatment
+   the Apple pages use -- one hue, used sparingly, over a neutral that is almost
+   but not quite black, with light surfaces raised by shadow rather than colour.
+   --------------------------------------------------------------------------- */
+:root{
+  --paper:#ffffff; --panel:#f7f7f9; --ink:#111116; --ink-2:#3a3a45; --muted:#63636f;
+  --line:#e6e6ec; --rule:#bfbfcb; --accent:#6d4aff; --accent-soft:rgba(109,74,255,.10);
+  --shadow:0 1px 2px rgba(17,17,22,.05),0 10px 30px -14px rgba(17,17,22,.24);
+}
+:root[data-theme="dark"]{
+  --paper:#08080b; --panel:#121218; --ink:#f2f2f6; --ink-2:#c6c6d2; --muted:#9a9aa8;
+  --line:#22222c; --rule:#3d3d4b; --accent:#a78bfa; --accent-soft:rgba(167,139,250,.16);
+  --shadow:0 1px 2px rgba(0,0,0,.6),0 12px 34px -16px rgba(0,0,0,.8);
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --paper:#08080b; --panel:#121218; --ink:#f2f2f6; --ink-2:#c6c6d2; --muted:#9a9aa8;
+  --line:#22222c; --rule:#3d3d4b; --accent:#a78bfa; --accent-soft:rgba(167,139,250,.16);
+  --shadow:0 1px 2px rgba(0,0,0,.6),0 12px 34px -16px rgba(0,0,0,.8);}}
+.motiv-t{color:var(--accent)}
+.ch-cap .red,.failcell .red{color:#e0245e}
+
+/* 3. section numerals large enough to read as numbering */
+.snum{font-size:1.45em;font-weight:600;color:var(--accent);opacity:.9;padding-top:0}
+.shead{gap:0 16px;align-items:center}
+
+/* 6. left rail */
+.rail{position:fixed;left:22px;top:50%;transform:translateY(-50%);z-index:80}
+.rail ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px}
+.rail a{display:block;padding:6px 12px;font-size:.76em;line-height:1.3;color:var(--muted);
+  text-decoration:none;border-left:2px solid transparent;transition:all .16s;max-width:15ch}
+.rail a:hover{color:var(--ink)}
+.rail a.on{color:var(--accent);border-left-color:var(--accent);font-weight:600}
+.rail{opacity:0;visibility:hidden;transition:opacity .35s,visibility .35s}
+.rail.show{opacity:1;visibility:visible}
+.rail a{border-radius:0 7px 7px 0}
+.rail a:hover{background:var(--panel)}
+.rail a.on{background:var(--accent-soft)}
+/* the rail lived on the left and had to disappear on narrow screens; in the
+   bar it stays until there is genuinely no room for it */
+.nav-inner{justify-content:space-between}
+
+/* 7. a <video> paints its own black backdrop behind rounded corners */
+.acell video,.acell img,.fabrow video,.stagevid video{background:var(--panel)}
+.acell .shot,.fabvid{border-radius:var(--radius);overflow:hidden;background:var(--panel)}
+.acell video,.acell img{border:0;border-radius:0}
+.acell .shot{border:1px solid var(--line);box-shadow:var(--shadow)}
+.arow{grid-template-columns:repeat(var(--nc,4),minmax(0,1fr))}
+
+/* 8. the left column was sized by its content, so every table started at a
+   different x and the hairlines never lined up */
+.restable{grid-template-columns:118px repeat(var(--n),minmax(0,1fr))}
+.rt-lbl,.rt-corner{width:118px;box-sizing:border-box}
+.rt-lbl.vert{display:flex;align-items:center;justify-content:flex-end;padding-right:12px}
+.rt-lbl.vert span{writing-mode:vertical-rl;transform:rotate(180deg);white-space:nowrap;
+  font-size:.94em;letter-spacing:.02em}
+.cmptable{min-width:0}
+.rt-h.ours .nm{color:var(--accent);font-weight:700}
+.rt-c.ours img{border:2px solid var(--accent);box-shadow:0 0 0 4px var(--accent-soft)}
+
+/* 9 + 10. sections read as separate beats, and nothing needs a scrollbar */
+section{padding:clamp(72px,7vw,120px) 0;scroll-margin-top:76px}
+section + section::before{width:min(var(--max-w),calc(100% - 44px))}
+.rtwrap{overflow-x:visible;padding-bottom:0}
+.restable{min-width:0}
+.galtable{min-width:0}
+html{scroll-behavior:smooth}
+
+/* two groups of four, side by side, each keeping the rotated sample labels */
+.cwrap{display:grid;grid-template-columns:1fr 1fr;gap:34px;max-width:var(--max-w-wide);
+  margin:0 auto;padding:0 22px}
+.cwrap .rtwrap{padding:0}
+.cwrap .restable{grid-template-columns:34px repeat(var(--n),minmax(0,1fr));gap:8px 6px}
+.cwrap .rt-lbl,.cwrap .rt-corner{width:34px}
+.cwrap .rt-lbl.vert{padding-right:4px}
+.cwrap .rt-lbl.vert span{font-size:.8em}
+.cwrap .rt-h .nm{font-size:.78em}
+
+/* ---------------------------------------------------------------------------
+   Phones. The rail is already hidden; below 1100px the two comparison groups
+   stack, and below 760px the wide tables scroll inside their own wrapper rather
+   than squeezing five or ten columns into 390px, which would make every panel
+   unreadable.
+   --------------------------------------------------------------------------- */
+@media (max-width:1100px){
+  .cwrap{grid-template-columns:1fr;gap:26px}
+}
+@media (max-width:760px){
+  body{font-size:16px}
+  .wrap,.shead,.sub,.motiv,.method,.exwrap,.cwrap,.bibwrap{padding-left:16px;padding-right:16px}
+  section{padding:56px 0}
+  .shead{grid-template-columns:auto auto;gap:0 10px}
+  .snum{font-size:1.15em}
+  .section-title{font-size:clamp(24px,7vw,30px)}
+  .sub{font-size:1em;max-width:none !important}
+  .hero-sticky{min-height:auto;height:auto;padding:88px 0 64px}
+  .hero-section{min-height:0}
+  .hero-content h1{font-size:clamp(26px,7.4vw,36px)}
+  .authors{gap:2px 14px}
+  .authors a{font-size:.9em}
+  .actions{gap:8px}
+  .act{padding:8px 13px;font-size:.82em}
+  .chain{grid-template-columns:1fr;gap:6px}
+  .ch-arrow{transform:rotate(90deg);height:34px;margin:2px auto}
+  .ch-arrow em{display:none}
+  .method-fig img{border-radius:10px}
+  .rtwrap{overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:8px}
+  .restable{min-width:560px}
+  .galtable{min-width:940px}
+  .cwrap .restable{min-width:480px}
+  .ex-stage{height:46vh;min-height:260px}
+  .ex-bar{flex-direction:column;align-items:stretch;gap:10px}
+  .ex-slide input{width:100%}
+  .ex-ctl{justify-content:space-between}
+  .simbar{flex-direction:column;align-items:stretch}
+  .simbtn{justify-content:center}
+  .totop{right:14px;bottom:14px;width:40px;height:40px}
+  #bibtex-body{font-size:.74em;padding:14px 16px}
+  .bibcopy{right:26px}
+}
+@media (max-width:420px){
+  .restable{min-width:460px}
+  .galtable{min-width:820px}
+}
+
+/* a 1fr grid track expands to fit its content, so the scrollable table pushed the
+   whole page sideways instead of scrolling inside its own box */
+.cwrap{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}
+@media (max-width:1100px){.cwrap{grid-template-columns:minmax(0,1fr)}}
+.rtwrap{width:100%;max-width:100%;min-width:0}
+.cwrap .rtwrap,.cwrap>*{min-width:0}
+section,.wrap,.cwrap,.exwrap,.method{max-width:100%}
+body{overflow-x:clip}
+
+/* ---------------------------------------------------------------------------
+   1. Typography. The serif/sans pairing was doing the work of two voices and
+   agreeing with neither; this is one family, set properly: weight and size carry
+   the hierarchy, tracking tightens as the type grows.
+   2. Section numerals removed.
+   3. Scale. Everything was on wide vw clamps, so the page redrew itself at every
+   width. Sizes are now near-fixed with a narrow clamp, and the content column is
+   a fixed measure centred in the viewport.
+   --------------------------------------------------------------------------- */
+:root{--max-w:1120px; --max-w-narrow:720px; --max-w-wide:1320px}
+body{font-family:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+  font-size:17px;line-height:1.65;letter-spacing:-.005em}
+.section-title,.hero-content h1,.tldr,.motiv-t,.method-t,.nav-logo{
+  font-family:'Inter',system-ui,-apple-system,sans-serif}
+.section-title{font-size:clamp(30px,2.2vw,36px);font-weight:600;letter-spacing:-.028em;
+  line-height:1.2;margin:0 auto 14px}
+.hero-content h1{font-size:clamp(34px,3.4vw,52px);font-weight:600;letter-spacing:-.032em;
+  line-height:1.12}
+.tldr{font-size:clamp(19px,1.5vw,23px) !important;font-weight:500;letter-spacing:-.018em;
+  line-height:1.5 !important;max-width:60ch !important}
+.tldr .tl{font-weight:700;letter-spacing:-.01em}
+.motiv-t,.method-t{font-size:clamp(20px,1.5vw,23px);font-weight:600;letter-spacing:-.022em}
+.sub{font-size:1em;line-height:1.68;max-width:62ch !important}
+/* 62ch reads as a thin column dropped into a wide page. Comfortable
+   running measure tops out around 75 characters; this lets the section
+   copy use it and lifts the line-height slightly to match. */
+.sub{line-height:1.62}
+.sub > *{max-width:74ch}
+.subnote{max-width:68ch}
+.simhint,figcaption,.ex-note{max-width:74ch}
+.nav-logo{font-weight:600;letter-spacing:-.02em;font-size:1em;
+  color:inherit;text-decoration:none;cursor:pointer;transition:color .16s}
+a.nav-logo:hover{color:var(--accent)}
+a.nav-logo:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:4px}
+.shead{grid-template-columns:1fr;gap:0}
+
+/* 3. one centred column, roughly the middle 60% of a wide screen */
+.wrap,.shead,.sub,.motiv,.bibwrap{max-width:var(--max-w);margin-left:auto;margin-right:auto}
+.method,.cwrap,.exwrap{max-width:var(--max-w-wide);margin-left:auto;margin-right:auto}
+section{padding:88px 0}
+@media (min-width:1700px){:root{--max-w:1180px;--max-w-wide:1400px}}
+
+/* 4. the table and the viewer show the same ten objects, so the table drives it */
+.pick{cursor:pointer}
+.pick img{transition:transform .18s,box-shadow .18s,border-color .18s}
+.pick:hover img{transform:translateY(-2px);border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-soft),var(--shadow)}
+.pick:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:6px}
+.galtable .rt-h.sel .nm,.galtable .rt-lbl.sel{color:var(--accent);font-weight:700}
+.galtable .rt-c.sel img{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+/* it sits under the viewer now */
+.exhint{text-align:center;font-size:.8em;color:var(--muted);margin:14px 0 0}
+
+/* 2. equal cells regardless of caption length, and shorter captions */
+.arow{grid-template-columns:repeat(var(--nc,4),minmax(0,1fr));align-items:start}
+.acell figcaption{white-space:normal;font-size:.82em;line-height:1.45;text-align:center;
+  display:block;padding-top:8px}
+.acell .num{margin-right:6px}
+.ablhead{display:flex;align-items:baseline;justify-content:space-between;gap:14px;width:100%}
+.ablhead .pill{margin-left:auto}
+
+/* 1. sections settle to their own top when you stop between two of them */
+@media (min-width:900px) and (prefers-reduced-motion:no-preference){
+  .hero-section{scroll-snap-align:start}
+}
+
+/* the two result tables share one section; a real single table is not possible
+   because only 3 of the 6 printed objects are among the 10 rendered ones, so a
+   merged grid would be mostly empty cells */
+.subhead{max-width:var(--max-w);margin:64px auto 8px;text-align:center;
+  font-size:1.12em;font-weight:600;letter-spacing:-.02em;color:var(--ink)}
+.subnote{max-width:56ch;margin:0 auto 26px;text-align:center;font-size:.92em;color:var(--muted)}
+
+/* both captions sit under a centred clip, so they centre too */
+.fabvid figcaption,.stagevid figcaption,.fabcell figcaption{
+  justify-content:center;text-align:center}
+
+/* section snapping: declared on the scrolling viewport, with the tall sections
+   opted out so a section longer than the screen never traps the scroll */
+
+.ch-arrow svg{width:26px;height:26px;stroke:var(--rule);stroke-width:2.4;fill:none;
+  stroke-linecap:round;stroke-linejoin:round}
+.chain{grid-template-columns:minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr);gap:12px 6px}
+.chain .ch-arrow{grid-row:1}
+.ch-step.ours img{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft),var(--shadow)}
+.segbar{display:flex;justify-content:center;margin:0 auto 16px}
+@media (max-width:900px){.chain{grid-template-columns:1fr}}
+
+.ch-cap.ours{color:var(--accent);font-weight:600}
+.chain .ch-cap{grid-row:2}
+
+/* the printed table is six columns; it does not need the full figure width */
+#simreal .rtwrap{max-width:var(--max-w);margin:0 auto}
+#simreal .restable{grid-template-columns:118px repeat(var(--n),minmax(0,1fr))}
+#simreal .fabrow{max-width:var(--max-w)}
+
+/* every section now fits one screen, so snapping can be even instead of jumpy */
+
+section{scroll-margin-top:16px}
+
+.proj{display:block;font-size:.72em;font-weight:700;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--accent);margin-bottom:12px}
+:root[data-theme="dark"] .proj,.hero-content .proj{color:#c9b8ff}
+/* 1. the problem section asks the question its content answers */
+.motiv-t::after{content:""}
+/* 6. The bar has no business over the hero: a white strip across the top of a
+   full-bleed dark cover reads as chrome that leaked in. It leaves the flow, sits
+   hidden, and drops in once the cover is behind you. The .scrolled class and its
+   scroll handler already existed for the shadow, so this is the same switch. */
+.navbar{position:fixed;top:0;left:0;right:0;transform:translateY(-100%);opacity:0;
+  pointer-events:none;transition:transform .28s ease,opacity .28s ease,box-shadow .25s}
+.navbar.scrolled{transform:none;opacity:1;pointer-events:auto}
+/* fixed means anchors land underneath it */
+section{scroll-margin-top:70px}
+@media (prefers-reduced-motion:reduce){
+  /* no transition to watch, and nothing should depend on scrolling to appear */
+  .navbar{position:relative;transform:none;opacity:1;pointer-events:auto;transition:none}
+  section{scroll-margin-top:16px}
+}
+/* the default scrollbar is a wide grey slab that fights the page */
+html{scrollbar-width:thin;scrollbar-color:var(--rule) transparent}
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--rule);border-radius:99px;
+  border:3px solid var(--paper);background-clip:padding-box}
+::-webkit-scrollbar-thumb:hover{background:var(--muted);border:3px solid var(--paper);
+  background-clip:padding-box}
+::-webkit-scrollbar-corner{background:transparent}
+.floatbtn{position:fixed;right:26px;bottom:78px;z-index:90;width:44px;height:44px;
+  border-radius:50%;box-shadow:var(--shadow)}
+@media (max-width:760px){.floatbtn{right:14px;bottom:62px;width:40px;height:40px}}
+
+/* 3. a switch, not a pair of segments */
+.texbtn{display:inline-flex;align-items:center;gap:9px;font:inherit;font-size:.88em;
+  font-weight:500;padding:8px 16px;border:1px solid var(--line);border-radius:999px;
+  background:var(--panel);color:var(--ink-2);cursor:pointer;transition:all .16s}
+.texbtn .dot{width:9px;height:9px;border-radius:50%;background:var(--rule);transition:all .16s}
+.texbtn[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);
+  background:var(--accent-soft)}
+.texbtn[aria-pressed="true"] .dot{background:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-soft)}
+
+/* 4. the clickable cells look like controls before you touch them */
+.gcard.pick img{border:1px solid var(--rule)}
+.galtable .rt-h.pick{border-radius:8px;padding:6px 4px;background:var(--panel);
+  border:1px solid var(--line)}
+.gcard.pick:hover img,.galtable .rt-h.pick:hover{border-color:var(--accent)}
+
+/* 5. the part chips in dark mode */
+.ex-chip{background:var(--panel);border-color:var(--line);color:var(--ink-2)}
+.ex-chip:hover{background:var(--accent-soft);border-color:var(--accent);color:var(--ink)}
+.ex-chip::before{box-shadow:0 0 0 1px rgba(0,0,0,.18) inset}
+
+/* 6. Real to Sim had hard-coded light values that stayed light in the dark theme */
+.ablrow{background:var(--panel);border-color:var(--line)}
+.num{background:var(--accent);color:#fff}
+.acell .shot,.acell .shot.light{background:var(--panel)}
+.acell .shot.light img{background:var(--panel)}
+.pill{background:var(--accent-soft);color:var(--ink-2);border-color:transparent}
+.pill.ghost{background:transparent;border:1px solid var(--line);color:var(--muted)}
+
+/* the chips are buttons now: they can be clicked, and the clicked one stays on */
+.ex-chip{font:inherit;cursor:pointer;transition:all .14s}
+.ex-chip:hover{background:var(--accent-soft);border-color:var(--accent);color:var(--ink)}
+.ex-chip.on{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.ex-chip.on::before{box-shadow:0 0 0 2px rgba(255,255,255,.55) inset}
+.ex-chip:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* Interactive: a looping horizontal strip instead of a ten-column table */
+.loopwrap{position:relative;max-width:var(--max-w-wide);margin:0 auto 18px;padding:0 22px;
+}
+.loop{-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 52px,#000 calc(100% - 52px),transparent 100%);
+  mask-image:linear-gradient(90deg,transparent 0,#000 52px,#000 calc(100% - 52px),transparent 100%);
+  display:flex;gap:16px;overflow-x:auto;scroll-behavior:auto;padding:4px 2px 14px;
+  scrollbar-width:none;-ms-overflow-style:none;cursor:grab}
+.loop::-webkit-scrollbar{display:none}
+.loop.drag{cursor:grabbing;scroll-behavior:auto}
+.gcard{flex:0 0 214px;margin:0;border:1px solid var(--line);border-radius:var(--radius);
+  background:var(--panel);overflow:hidden;transition:border-color .16s,transform .16s}
+.gcard:hover{border-color:var(--accent);transform:translateY(-2px)}
+.gcard.sel{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+.gcard-h{display:flex;align-items:center;justify-content:space-between;gap:8px;
+  padding:10px 12px;border-bottom:1px solid var(--line)}
+.gname{font-size:.86em;font-weight:600;letter-spacing:-.01em}
+.gcard-b{display:grid;grid-template-rows:repeat(3,auto);gap:1px;background:var(--line)}
+.gcard-b figure{margin:0;background:var(--panel)}
+.gcard-b img{width:100%;aspect-ratio:4/3;object-fit:cover;display:block;background:var(--panel)}
+.gcard-b figcaption{display:block;text-align:center;padding:5px 0 7px;font-size:.74em;
+  color:var(--muted)}
+.loopbtn{position:absolute;top:50%;transform:translateY(-50%);width:38px;height:38px;
+  display:flex;align-items:center;justify-content:center;border-radius:50%;
+  border:1px solid var(--line);background:var(--paper);color:var(--ink-2);cursor:pointer;
+  box-shadow:var(--shadow);z-index:3}
+.loopbtn{background:var(--paper);box-shadow:var(--shadow)}
+.loopbtn:hover{color:var(--accent);border-color:var(--accent)}
+.loopbtn svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;
+  stroke-linecap:round;stroke-linejoin:round}
+.loopbtn.prev{left:4px} .loopbtn.next{right:4px}
+@media (max-width:760px){.gcard{flex:0 0 168px}.loopbtn{display:none}}
+
+/* The section rail is fixed against the left edge, and the wide sections centre
+   themselves on the viewport, so between 1400 and roughly 1730px they were
+   centring straight underneath it: measured, the strip's left edge sat at 60px
+   against a rail whose right edge is 142px. Reserve a rail-width lane on BOTH
+   sides so the content stays centred, and cap the wide containers to what is
+   left. Below 1400px the rail hides itself and the cap lifts with it, so narrow
+   windows get the full width back. */
+:root{--rail-lane:178px}
+@media (min-width:1401px){
+  .wrap.wide,.method,.cwrap,.exwrap,.loopwrap,.simbar{
+    max-width:min(var(--max-w-wide),calc(100vw - 2*var(--rail-lane)))}
+}
+
+/* ---- section-by-section fixes ------------------------------------------- */
+
+/* 1. The row labels were set in mono, which made "2 Printed parts" 134px wide
+   inside a 118px column: the text spilled out of its own box toward the first
+   thumbnail. They are labels for columns that are already set in the body face,
+   so use it here too - narrower and consistent. */
+.rt-lbl,.cg-lbl{font-family:'IBM Plex Sans',system-ui,sans-serif !important;
+  letter-spacing:0}
+/* and the column itself was too narrow for a badge plus "Printed parts": the
+   label measured 136px inside 118px, so it spilled toward the first thumbnail */
+.restable{grid-template-columns:146px repeat(var(--n),minmax(0,1fr)) !important}
+.restable .rt-lbl,.restable .rt-corner{width:146px !important;font-size:.84em}
+.cwrap .restable{grid-template-columns:34px repeat(var(--n),minmax(0,1fr)) !important}
+.cwrap .rt-lbl,.cwrap .rt-corner{width:34px !important}
+
+/* 2. The rotated labels in the comparison grids were 11.2px. Rotated type needs
+   more size than horizontal type, not less. */
+.rt-lbl.vert span{font-size:1.02em !important;letter-spacing:.01em}
+
+/* 3. The empty corner cell carried a border-bottom, so every grid had a stray
+   118px rule floating to the left of its header row with nothing above it. */
+.rt-corner{border-bottom:0 !important}
+
+/* B1. The four chain panels were letterboxed into a 4/3 box while three of the
+   four images are square and the fourth was 371x223 - every panel had white
+   bars of a different size. The odd image is now padded square on disk and the
+   box matches, so all four fill identically. */
+.ch-step img{aspect-ratio:1/1 !important;background:var(--card)}
+
+/* B3. "Why Physically Implausible?" was a red serif h3 sitting where every
+   other section uses the large sans title. Same level, same treatment. */
+.motiv-t{font-family:inherit !important;font-size:1.7em !important;font-weight:700 !important;
+  color:var(--ink) !important;letter-spacing:-.015em;margin-bottom:14px !important}
+
+/* B4. A neutral marker in the badge slot keeps the first caption on the same
+   indent as the four numbered stages without pretending it is a stage. */
+.num.ghostnum{background:transparent;color:var(--muted);border:1px solid var(--line);
+  font-size:.6em;letter-spacing:.04em;text-transform:uppercase}
+
+/* B6. The provenance line was a wide grey pill that read as a disabled input. */
+.provenance{font-size:.8em;color:var(--muted);letter-spacing:.01em}
+.provenance::before{content:"";display:inline-block;width:5px;height:5px;border-radius:50%;
+  background:var(--rule);margin-right:8px;vertical-align:middle}
+
+/* C1. The viewer's controls were spread across three different alignments:
+   Texture centred above the strip, the hint centred below it, the slider and
+   Reset hard right. One row, centred, under the strip. */
+.ex-bar{justify-content:center !important}
+.ex-note{text-align:center !important;margin-left:auto;margin-right:auto}
+
+/* C3. The run button sat alone in its own band, a long way above the grids it
+   drives. */
+.simbar{margin-bottom:18px !important}
+
+/* D1. On a phone the grids scroll sideways with no affordance at all. Fade the
+   right edge so there is something to chase. */
+@media (max-width:900px){
+  /* line 691 turns this back to visible for the desktop two-up layout, and the
+     rule that restores scrolling only kicks in below 760 - so between 760 and
+     900 the grid pushed the whole page sideways */
+  .rtwrap{overflow-x:auto !important;-webkit-overflow-scrolling:touch;
+    position:relative;
+    -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 36px),transparent 100%);
+    mask-image:linear-gradient(90deg,#000 calc(100% - 36px),transparent 100%)}
+}
+
+/* E2. A pure-white thumbnail on a near-black page is a glare source; the inputs
+   are cut-outs on white, so give them the card colour instead. */
+:root[data-theme="dark"] .rt-c img,
+:root:not([data-theme="light"]) .rt-c img{filter:brightness(.93)}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]) .rt-c img{filter:none}}
+
+/* Ragging. Centred copy was breaking with one or two words stranded on the last
+   line, which is the thing that makes a page feel unfinished even when every
+   element is in the right place. text-wrap:balance evens the lines out across
+   short blocks; pretty handles the longer ones by refusing to leave a widow. */
+/* Running copy gets pretty, not balance. balance equalises the line lengths,
+   which means it deliberately pulls words down off line one: that is what was
+   breaking "a valid physical assembly." and "between neighboring parts," onto
+   the next line. pretty fills each line and only intervenes to stop a widow.
+   balance still belongs on headings and on the one-line captions. */
+.sub,.motiv-p,.tldr,.lede,p,li,figcaption{text-wrap:pretty}
+.ch-cap,.note,.ex-note,.subnote,.simhint,.method-fig figcaption{text-wrap:balance}
+
+/* And the measure was the other half of it: an 814px column of text sitting
+   over a 1300px row of pictures reads as a narrow slot, and it forced three
+   lines where two will do. Let the copy use the page's own content column. */
+.sub,.motiv-p{max-width:min(104ch,100%) !important}
+.section-title,h1,h2,h3,.motiv-t,.gname,.rt-h .nm{text-wrap:balance}
+/* and the rail labels should never break mid-phrase */
+.rail a{text-wrap:balance}
+/* balance only applies to short blocks - Chrome stops at six lines - so on a
+   phone, where the same paragraph runs to seven, it silently switches off and
+   the widows come back. pretty has no line limit and exists for exactly this. */
+@media (max-width:900px){
+  .sub,.motiv-p,.tldr,figcaption,.ch-cap,.ex-note,.subnote,.simhint,.lede,
+  .method-fig figcaption{text-wrap:pretty}
+}
+
+/* ---- mobile: two sequences that collapsed instead of scrolling ----------- */
+/* Both the chain and the stage row are two-row grids where the picture and its
+   caption are separate elements tied together only by sharing a column. The
+   single-column mobile override broke that pairing: the chain rendered its four
+   captions in a block of their own, above images of three different sizes, and
+   the five stages squeezed into 60px columns with the captions colliding.
+   Keeping the grid and scrolling it sideways preserves both the pairing and the
+   left-to-right reading of a sequence. */
+@media (max-width:900px){
+  .chain{grid-template-columns:168px 74px 168px 74px 168px 74px 168px !important;
+    overflow-x:auto;scroll-snap-type:x proximity;padding-bottom:10px;
+    -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 32px),transparent 100%);
+    mask-image:linear-gradient(90deg,#000 calc(100% - 32px),transparent 100%)}
+  .ch-step{grid-row:1 !important;scroll-snap-align:center}
+  /* line 730 rotates the arrow 90deg and hides its label for the old stacked
+     layout; the strip runs left-to-right again, so undo both */
+  .ch-arrow{grid-row:1 !important;flex-direction:column !important;
+    transform:none !important;height:auto !important;margin:0 !important}
+  .ch-arrow em{display:block !important;font-size:.74em}
+  .ch-arrow span{width:100% !important}
+  .ch-cap{grid-row:2 !important}
+  .chain i{display:block !important;grid-row:2}
+
+  .arow{grid-template-columns:repeat(var(--nc,4),150px) !important;
+    overflow-x:auto;padding-bottom:10px;
+    -webkit-mask-image:linear-gradient(90deg,#000 calc(100% - 32px),transparent 100%);
+    mask-image:linear-gradient(90deg,#000 calc(100% - 32px),transparent 100%)}
+  .ablhead{flex-direction:column;align-items:flex-start;gap:4px}
+  .ablhead .provenance{margin-left:0}
+
+  /* The printed-assembly grid was sized by a 760px min-width shared with the
+     comparison grids. Against a 146px label column that leaves about 100px per
+     object, which is not enough for "7 printed parts": the header pills ran into
+     each other and the thumbnails came out around 45px. The grid already scrolls
+     sideways, so give the columns a real size and let it be wider than the phone
+     rather than compressing six objects into one screen. */
+  .restable{min-width:0 !important;width:max-content;
+    grid-template-columns:118px repeat(var(--n),138px) !important}
+  .restable .rt-lbl,.restable .rt-corner{width:118px !important;white-space:normal}
+  .restable .rt-h .pill{white-space:nowrap}
+  .restable .rt-h .nm{font-size:.9em}
+  /* the comparison grids keep their narrow rotated labels */
+  .cwrap .restable{grid-template-columns:30px repeat(var(--n),132px) !important}
+  .cwrap .rt-lbl,.cwrap .rt-corner{width:30px !important}
+
+  /* The row labels were pinned with position:sticky so they stayed readable
+     while the grid scrolled. On a phone that turns into a solid column parked
+     over the pictures for the whole scroll - and in dark mode it is a black bar.
+     Let them travel with the row instead; the header row is what orients you. */
+  .restable .rt-lbl{position:static !important;background:none !important}
+}
+
+/* ---- the section nav moves into the top bar -------------------------------
+   It was a fixed vertical rail down the left edge, which meant reserving a
+   rail-width lane on both sides of every wide section so the content would not
+   centre underneath it. In the bar it costs no page width at all, so that cap
+   comes off and the grids get their full width back. */
+.rail{position:static !important;transform:none !important;opacity:1 !important;
+  visibility:visible !important;margin-left:auto;min-width:0;overflow:hidden}
+.rail ul{flex-direction:row !important;gap:0 !important;align-items:center;
+  flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none}
+.rail ul::-webkit-scrollbar{display:none}
+.rail li{flex:0 0 auto}
+.rail a{border-left:0 !important;border-radius:7px;padding:6px 11px !important;
+  max-width:none !important;font-size:.82em;white-space:nowrap;line-height:1}
+.rail a.on{background:var(--accent-soft);color:var(--accent)}
+.nav-inner{gap:18px}
+/* the cap existed only to clear the old rail */
+@media (min-width:1401px){
+  .wrap.wide,.method,.cwrap,.exwrap,.loopwrap,.simbar{
+    max-width:var(--max-w-wide) !important}
+}
+/* the bar carries the nav now, so it has to stay reachable on a phone; the
+   links scroll sideways inside it rather than wrapping the bar to two rows */
+@media (max-width:820px){
+  .rail a{padding:6px 8px !important;font-size:.78em}
+  .nav-inner{gap:10px}
+}
+@media (max-width:460px){.rail{display:none}}
+
+/* The wordmark was a tinted violet on a dark video: it read as a caption rather
+   than as the name of the thing. White, and larger. */
+.proj{font-size:.9em !important;color:#fff !important;letter-spacing:.17em !important;
+  margin-bottom:16px !important}
+:root[data-theme="dark"] .proj,.hero-content .proj{color:#fff !important}
+
+/* The title and its buttons were sized for a bar, not for a cover. */
+.hero-content h1{font-size:clamp(38px,4.6vw,68px) !important}
+.act{padding:12px 22px !important;font-size:1.02em !important;gap:10px !important;
+  border-radius:8px !important}
+.act svg{width:18px !important;height:18px !important}
+/* the brand marks are filled shapes, not line icons */
+.act svg.brand{fill:currentColor;stroke:none;width:19px !important;height:19px !important}
+.act em{font-size:.72em}
+@media (max-width:760px){
+  .act{padding:10px 15px !important;font-size:.92em !important}
+  .act svg,.act svg.brand{width:16px !important;height:16px !important}
+}
+
+/* A quiet marker for the shots that are simulator output. Several of them sit on
+   a plain grey floor, which reads as a studio backdrop rather than as a physics
+   scene, so the caption has to say it. One per group, not one per tile. */
+.simtag{display:inline-flex;align-items:center;gap:5px;vertical-align:middle;
+  font-size:.86em;color:var(--muted);white-space:nowrap}
+.simtag svg{width:12px;height:12px;fill:none;stroke:currentColor;stroke-width:2;
+  stroke-linecap:round;stroke-linejoin:round;flex:0 0 auto}
+.ch-cap .simtag{display:block;margin-top:3px;justify-content:center;font-size:.92em}
+.simbar{align-items:center !important}
+.simbar .simtag{font-size:.82em}
+@media (max-width:760px){.simbar .simtag{white-space:normal}}
+</style></head><body>
+
+<nav class="navbar" id="navbar"><div class="nav-inner">
+  <a class="nav-logo" href="#top" aria-label="Back to top">SNAP3D</a>
+  <nav id="rail" class="rail" aria-label="Sections"><ul><li><a href="#problem">Prior Work</a></li><li><a href="#method">Approach</a></li><li><a href="#compare">Comparison</a></li><li><a href="#ablation">Stages</a></li><li><a href="#simreal">Real-World</a></li><li><a href="#gallery">Demos</a></li><li><a href="#bibtex">BibTeX</a></li></ul></nav>
+  </div></nav>
+
+<button id="theme" class="iconbtn floatbtn" type="button" aria-label="Toggle colour theme">
+    <svg class="i-sun" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.4v2.6M12 19v2.6M4.5 4.5l1.9 1.9M17.6 17.6l1.9 1.9M2.4 12H5M19 12h2.6M4.5 19.5l1.9-1.9M17.6 6.4l1.9-1.9"/></svg>
+    <svg class="i-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20.5 14.6A8.6 8.6 0 1 1 9.4 3.5a7 7 0 0 0 11.1 11.1Z"/></svg>
+  </button>
+<button id="totop" class="totop" type="button" aria-label="Back to top">
+  <svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="6,14 12,8 18,14"/></svg></button>
+
+<section class="hero-section" id="top">
+  <div class="hero-sticky">
+    <video class="hero-video" src="media/stability_9x9.mp4" autoplay muted loop playsinline></video>
+    <div class="hero-scrim"></div>
+    <div class="hero-content">
+      <h1><span class="proj">SNAP3D</span>Physically Grounded 3D Parts for Assembly from a Single Image</h1>
+      <div class="authors">
+      <a href="https://lucytuan.github.io/" target="_blank" rel="noopener">Yu-Rou Tuan</a><a href="https://henrytsui000.github.io/" target="_blank" rel="noopener">Hao-Tang Tsui</a>
+      <a href="https://nicolasugrinovic.github.io/" target="_blank" rel="noopener">Nicol&aacute;s Ugrinovic</a><a href="https://kriskitani.github.io/" target="_blank" rel="noopener">Kris Kitani</a><a href="https://shirleymaxx.github.io/" target="_blank" rel="noopener">Xiaoxuan Ma</a>
+    </div>
+    <div class="affil">Carnegie Mellon University</div>
+    <div class="actions">
+      <span class="act soon"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8.5" y1="13" x2="15.5" y2="13"/><line x1="8.5" y1="17" x2="13" y2="17"/></svg>arXiv<em>soon</em></span>
+      <a class="act" href="https://github.com/LucyTuan/SNAP3D" target="_blank" rel="noopener"><svg class="brand" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 .5C5.37.5 0 5.87 0 12.5c0 5.3 3.44 9.8 8.21 11.39.6.11.82-.26.82-.58 0-.29-.01-1.05-.02-2.06-3.34.73-4.04-1.61-4.04-1.61-.55-1.39-1.34-1.76-1.34-1.76-1.09-.75.08-.73.08-.73 1.2.08 1.84 1.24 1.84 1.24 1.07 1.83 2.81 1.3 3.5.99.11-.78.42-1.3.76-1.6-2.67-.3-5.47-1.33-5.47-5.93 0-1.31.47-2.38 1.24-3.22-.12-.3-.54-1.52.12-3.17 0 0 1.01-.32 3.3 1.23a11.5 11.5 0 0 1 6 0c2.29-1.55 3.3-1.23 3.3-1.23.66 1.65.24 2.87.12 3.17.77.84 1.24 1.91 1.24 3.22 0 4.61-2.81 5.63-5.49 5.93.43.37.82 1.1.82 2.22 0 1.6-.02 2.89-.02 3.29 0 .32.22.7.83.58A12 12 0 0 0 24 12.5C24 5.87 18.63.5 12 .5z"/></svg>Code</a>
+      <a class="act" href="https://youtu.be/22yRDaWabwA" target="_blank" rel="noopener"><svg class="brand" viewBox="0 0 24 24" aria-hidden="true"><path d="M23 12s0-3.6-.46-5.32a2.94 2.94 0 0 0-2.07-2.08C18.75 4.14 12 4.14 12 4.14s-6.75 0-8.47.46a2.94 2.94 0 0 0-2.07 2.08C1 8.4 1 12 1 12s0 3.6.46 5.32a2.94 2.94 0 0 0 2.07 2.08c1.72.46 8.47.46 8.47.46s6.75 0 8.47-.46a2.94 2.94 0 0 0 2.07-2.08C23 15.6 23 12 23 12z"/><path d="M9.9 15.36 15.5 12 9.9 8.64z" fill="#0d0c12"/></svg>Video</a>
+    </div>
+    </div>
+  </div>
+</section>
+
+<section id="abstract"><div class="wrap">
+  <p class="tldr"><b class="tl">TL;DR</b> We propose a physics-guided framework for improving single-image part-aware 3D generation with physically compatible geometry and stable connections.</p>
+
+  <div class="motiv" id="problem" style="scroll-margin-top:90px">
+    <h3 class="motiv-t">Limitation of Prior Work</h3>
+    <p class="motiv-p">Existing methods generate visually complete parts without ensuring they form a valid physical assembly. Neighboring parts interpenetrate, lack valid connections, or collapse under gravity.</p>
+  </div>
+  <div class="chain">
+    <figure class="ch-step"><img src="assets/4f55c8119baa.png" alt="Input image"></figure>
+    <div class="ch-arrow"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9,5 16,12 9,19"/></svg><em>3D generator</em></div>
+    <figure class="ch-step"><img src="assets/tri_pen_explode.webp" alt="Parts pulled apart, overlap in red"></figure>
+    <div class="ch-arrow"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9,5 16,12 9,19"/></svg><em>simulation</em></div>
+    <figure class="ch-step"><img src="assets/64825d27ba7d.webp" alt="The same parts under gravity"></figure>
+    <div class="ch-arrow"><svg viewBox="0 0 24 24" aria-hidden="true"><polyline points="9,5 16,12 9,19"/></svg><em>SNAP3D</em></div>
+    <figure class="ch-step ours"><img src="assets/2c116621531d.webp" alt="Our result under gravity"></figure>
+    <p class="ch-cap">Input image</p><i></i>
+    <p class="ch-cap"><b class="red">Red</b> is geometry buried inside a neighbouring part</p><i></i>
+    <p class="ch-cap">Released under gravity <span class="simtag"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="3" x2="12" y2="15"/><polyline points="7,10 12,15 17,10"/><line x1="4" y1="20" x2="20" y2="20"/></svg>in simulation</span></p><i></i><p class="ch-cap ours">Ours: holds together <span class="simtag"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="3" x2="12" y2="15"/><polyline points="7,10 12,15 17,10"/><line x1="4" y1="20" x2="20" y2="20"/></svg>in simulation</span></p>
+  </div></div>
+  </section>
+
+
+<section id="method"><div class="wrap">
+  <div class="shead"><h2 class="section-title">Approach</h2></div>
+  <p class="sub">We resolve inter-part penetration, recover a contact graph between neighboring parts, and introduce parameterized connectors refined against physical simulation.</p>
+  <figure class="method-fig">
+      <img src="assets/method_overview.webp" alt="Overview of the framework">
+      <figcaption>Given part meshes from a part-level 3D generator, the three stages run in order.
+      Bottom: the baseline parts collapse under gravity while ours settles and holds; the exploded
+      view shows the generated peg-and-socket connectors.</figcaption>
+    </figure>
+</div></section>
+<section id="compare"><div class="wrap">
+  <div class="shead"><h2 class="section-title">Comparison</h2></div>
+  <p class="sub">Every assembly is released under gravity exactly as generated. Parts that look complete are not necessarily physically realizable: they interpenetrate, have no valid contact surfaces, and fall. Our method makes them realizable.</p></div>
+  <div class="simbar"><button id="simbtn" class="simbtn" type="button"><span class="simdot"></span>Run the simulation</button><span class="simtag"><svg viewBox="0 0 24 24" aria-hidden="true"><line x1="12" y1="3" x2="12" y2="15"/><polyline points="7,10 12,15 17,10"/><line x1="4" y1="20" x2="20" y2="20"/></svg>rigid-body physics simulation</span></div><div class="cwrap"><div class="rtwrap"><div class="restable cmptable" style="--n:5"><div class="rt-lbl rt-corner"></div><div class="rt-h"><span class="nm">Input image</span></div><div class="rt-h ours"><span class="nm">Ours</span></div><div class="rt-h"><span class="nm">XPart</span></div><div class="rt-h"><span class="nm">OmniPart</span></div><div class="rt-h"><span class="nm">PartCrafter</span></div><div class="rt-lbl vert"><span>Triceratops</span></div><div class="rt-c"><img src="assets/4f55c8119baa.png" alt="Input image"></div><div class="rt-c ours"><img class="sim" data-run="assets/2c116621531d.webp" src="assets/2c116621531d.webp" alt="Ours"></div><div class="rt-c"><img class="sim" data-run="assets/64825d27ba7d.webp" src="assets/64825d27ba7d.webp" alt="XPart"></div><div class="rt-c"><img class="sim" data-run="assets/291653409d4f.webp" src="assets/291653409d4f.webp" alt="OmniPart"></div><div class="rt-c"><img class="sim" data-run="assets/cfac48222211.webp" src="assets/cfac48222211.webp" alt="PartCrafter"></div><div class="rt-lbl vert"><span>Robot</span></div><div class="rt-c"><img src="assets/3c2eea4483dc.png" alt="Input image"></div><div class="rt-c ours"><img class="sim" data-run="assets/289c4a0655be.webp" src="assets/289c4a0655be.webp" alt="Ours"></div><div class="rt-c"><img class="sim" data-run="assets/288546170ee2.webp" src="assets/288546170ee2.webp" alt="XPart"></div><div class="rt-c"><img class="sim" data-run="assets/10ced4924ff6.webp" src="assets/10ced4924ff6.webp" alt="OmniPart"></div><div class="rt-c"><img class="sim" data-run="assets/32f5abad0a9d.webp" src="assets/32f5abad0a9d.webp" alt="PartCrafter"></div><div class="rt-lbl vert"><span>Minifigure</span></div><div class="rt-c"><img src="assets/988ccd053772.png" alt="Input image"></div><div class="rt-c ours"><img class="sim" data-run="assets/41dd584f6269.webp" src="assets/41dd584f6269.webp" alt="Ours"></div><div class="rt-c"><img class="sim" data-run="assets/f65d3db26f09.webp" src="assets/f65d3db26f09.webp" alt="XPart"></div><div class="rt-c"><img class="sim" data-run="assets/4f8c384e2163.webp" src="assets/4f8c384e2163.webp" alt="OmniPart"></div><div class="rt-c"><img class="sim" data-run="assets/9ffe480db882.webp" src="assets/9ffe480db882.webp" alt="PartCrafter"></div><div class="rt-lbl vert"><span>Signpost</span></div><div class="rt-c"><img src="assets/29c0d1e74ff9.png" alt="Input image"></div><div class="rt-c ours"><img class="sim" data-run="assets/50d44712624d.webp" src="assets/50d44712624d.webp" alt="Ours"></div><div class="rt-c"><img class="sim" data-run="assets/663a8e1fb97b.webp" src="assets/663a8e1fb97b.webp" alt="XPart"></div><div class="rt-c"><img class="sim" data-run="assets/3f19ca999f08.webp" src="assets/3f19ca999f08.webp" alt="OmniPart"></div><div class="rt-c"><img class="sim" data-run="assets/f7a8a51e956b.webp" src="assets/f7a8a51e956b.webp" alt="PartCrafter"></div></div></div><div class="rtwrap"><div class="restable cmptable" style="--n:5"><div class="rt-lbl rt-corner"></div><div class="rt-h"><span class="nm">Input image</span></div><div class="rt-h ours"><span class="nm">Ours</span></div><div class="rt-h"><span class="nm">XPart</span></div><div class="rt-h"><span class="nm">OmniPart</span></div><div class="rt-h"><span class="nm">PartCrafter</span></div><div class="rt-lbl vert"><span>Lantern</span></div><div class="rt-c"><img src="assets/98cff008ee88.png" alt="Input image"></div><div class="rt-c ours"><img class="sim" data-run="assets/d222b97d82bd.webp" src="assets/d222b97d82bd.webp" alt="Ours"></div><div class="rt-c"><img class="sim" data-run="assets/7d6557a1f528.webp" src="assets/7d6557a1f528.webp" alt="XPart"></div><div class="rt-c"><img class="sim" data-run="assets/e0757c29ce89.webp" src="assets/e0757c29ce89.webp" alt="OmniPart"></div><div class="rt-c"><img class="sim" data-run="assets/89058942b24a.webp" src="assets/89058942b24a.webp" alt="PartCrafter"></div><div class="rt-lbl vert"><span>Snowman</span></div><div class="rt-c"><img src="assets/afe89caac480.png" alt="Input image"></div><div class="rt-c ours"><img class="sim" data-run="assets/9e34d69c3804.webp" src="assets/9e34d69c3804.webp" alt="Ours"></div><div class="rt-c"><img class="sim" data-run="assets/aa7074f85ee8.webp" src="assets/aa7074f85ee8.webp" alt="XPart"></div><div class="rt-c"><img class="sim" data-run="assets/3145eaeec3ac.webp" src="assets/3145eaeec3ac.webp" alt="OmniPart"></div><div class="rt-c"><img class="sim" data-run="assets/579d13cb74e0.webp" src="assets/579d13cb74e0.webp" alt="PartCrafter"></div><div class="rt-lbl vert"><span>Water blaster</span></div><div class="rt-c"><img src="assets/39e7bee31676.png" alt="Input image"></div><div class="rt-c ours"><img class="sim" data-run="assets/d8e48e6fe8fe.webp" src="assets/d8e48e6fe8fe.webp" alt="Ours"></div><div class="rt-c"><img class="sim" data-run="assets/a1a52a39bc2b.webp" src="assets/a1a52a39bc2b.webp" alt="XPart"></div><div class="rt-c"><img class="sim" data-run="assets/383e8b5532d7.webp" src="assets/383e8b5532d7.webp" alt="OmniPart"></div><div class="rt-c"><img class="sim" data-run="assets/aa1dcf463545.webp" src="assets/aa1dcf463545.webp" alt="PartCrafter"></div><div class="rt-lbl vert"><span>Armchair</span></div><div class="rt-c"><img src="assets/6e5a7eb62d29.png" alt="Input image"></div><div class="rt-c ours"><img class="sim" data-run="assets/73c24bdf4164.webp" src="assets/73c24bdf4164.webp" alt="Ours"></div><div class="rt-c"><img class="sim" data-run="assets/350e5b1b36f6.webp" src="assets/350e5b1b36f6.webp" alt="XPart"></div><div class="rt-c"><img class="sim" data-run="assets/bed593dfa2a3.webp" src="assets/bed593dfa2a3.webp" alt="OmniPart"></div><div class="rt-c"><img class="sim" data-run="assets/5b4f127f8e71.webp" src="assets/5b4f127f8e71.webp" alt="PartCrafter"></div></div></div></div>
+  </section>
+
+<section id="ablation"><div class="wrap wide">
+  <div class="shead"><h2 class="section-title">What Each Stage Fixes</h2></div>
+  <p class="sub">Each stage added cumulatively to the same input decomposition. Geometry editing removes penetration, connectors provide the largest gain in stability, and physics-based optimization fixes the remaining cases.</p>
+  <div class="ablrow">
+      <div class="ablhead"><h3>Office chair</h3> <span class="provenance">Input photographed on a phone &middot; every stage shown in physics simulation</span></div>
+      <div class="arow" style="--nc:5"><figure class="acell"> <div class="shot light"><img src="assets/d61340233b0f.png" alt="Input image"></div><figcaption><span class="num ghostnum">in</span>Input image</figcaption></figure><figure class="acell">
+            <div class="shot dark"><video src="assets/75cebe74e2c5.mp4" autoplay loop muted playsinline></video></div>
+            <figcaption><span class="num">1</span>Part generation</figcaption></figure><figure class="acell">
+            <div class="shot dark"><video src="assets/ff857b778842.mp4" autoplay loop muted playsinline></video></div>
+            <figcaption><span class="num">2</span>Geometry editing</figcaption></figure><figure class="acell">
+            <div class="shot dark"><video src="assets/bec87786a3b2.mp4" autoplay loop muted playsinline></video></div>
+            <figcaption><span class="num">3</span>Connector init</figcaption></figure><figure class="acell">
+            <div class="shot dark"><video src="assets/8406502251cc.mp4" autoplay loop muted playsinline></video></div>
+            <figcaption><span class="num">4</span>Connector optimization</figcaption></figure></div></div></div>
+</section>
+
+
+
+
+
+
+
+<section id="simreal"><div class="wrap">
+  <div class="shead"><h2 class="section-title">Real-World 3D-Printed Assemblies</h2></div>
+  <p class="sub">The exported parts go to a desktop FDM printer and join by hand, with no glue and
+  no fasteners. Each row shows the input image, the parts as printed, and the object after manual
+  assembly.</p>
+  <div class="fabcol fabrow">
+      <figure class="fabvid">
+        <video src="assets/b8303b2e3cea.webm" autoplay loop muted playsinline></video>
+        <figcaption>Printing on a Bambu Lab A1 mini &middot; PLA</figcaption>
+      </figure>
+      <figure class="fabvid">
+        <video src="assets/6c0907845ecb.webm" autoplay loop muted playsinline></video>
+        <figcaption>Every object printed and assembled</figcaption>
+      </figure>
+    </div>
+  <div class="rtwrap"><div class="restable" style="--n:6"><div class="rt-lbl rt-corner"></div><div class="rt-h"><span class="nm">Ham hock</span><span class="pill">3 printed parts</span></div><div class="rt-h"><span class="nm">Park bench</span><span class="pill">7 printed parts</span></div><div class="rt-h"><span class="nm">Triceratops</span><span class="pill">7 printed parts</span></div><div class="rt-h"><span class="nm">Gorilla</span><span class="pill">8 printed parts</span></div><div class="rt-h"><span class="nm">Spacesuit toy</span><span class="pill">3 printed parts</span></div><div class="rt-h"><span class="nm">Cannon</span><span class="pill">8 printed parts</span></div><div class="rt-lbl"><span class="num">1</span>Input image</div><div class="rt-c"><img src="assets/a178302c6456.jpg" alt="Input image &mdash; Ham hock" loading="lazy"></div><div class="rt-c"><img src="assets/d6dd7e6381ac.jpg" alt="Input image &mdash; Park bench" loading="lazy"></div><div class="rt-c"><img src="assets/d546af881e3f.jpg" alt="Input image &mdash; Triceratops" loading="lazy"></div><div class="rt-c"><img src="assets/93234919dfd3.jpg" alt="Input image &mdash; Gorilla" loading="lazy"></div><div class="rt-c"><img src="assets/d8583a310bbb.jpg" alt="Input image &mdash; Spacesuit toy" loading="lazy"></div><div class="rt-c"><img src="assets/12fa26498b0c.jpg" alt="Input image &mdash; Cannon" loading="lazy"></div><div class="rt-lbl"><span class="num">2</span>Printed parts</div><div class="rt-c"><img src="assets/4ae7926dd25c.jpg" alt="Printed parts &mdash; Ham hock" loading="lazy"></div><div class="rt-c"><img src="assets/61a1d305d690.jpg" alt="Printed parts &mdash; Park bench" loading="lazy"></div><div class="rt-c"><img src="assets/a9f88e9b0538.jpg" alt="Printed parts &mdash; Triceratops" loading="lazy"></div><div class="rt-c"><img src="assets/5fdef904c70c.jpg" alt="Printed parts &mdash; Gorilla" loading="lazy"></div><div class="rt-c"><img src="assets/ff4841349ed1.jpg" alt="Printed parts &mdash; Spacesuit toy" loading="lazy"></div><div class="rt-c"><img src="assets/0bba0abf012f.jpg" alt="Printed parts &mdash; Cannon" loading="lazy"></div><div class="rt-lbl"><span class="num">3</span>Assembled</div><div class="rt-c"><img src="assets/4188d603fc97.jpg" alt="Assembled &mdash; Ham hock" loading="lazy"></div><div class="rt-c"><img src="assets/561fbc689a95.jpg" alt="Assembled &mdash; Park bench" loading="lazy"></div><div class="rt-c"><img src="assets/8e707c58fa09.jpg" alt="Assembled &mdash; Triceratops" loading="lazy"></div><div class="rt-c"><img src="assets/d0ea24f70bdd.jpg" alt="Assembled &mdash; Gorilla" loading="lazy"></div><div class="rt-c"><img src="assets/2f114e0c5ce1.jpg" alt="Assembled &mdash; Spacesuit toy" loading="lazy"></div><div class="rt-c"><img src="assets/9db4abf44589.jpg" alt="Assembled &mdash; Cannon" loading="lazy"></div></div></div>
+</div></section>
+
+<section id="gallery"><div class="wrap">
+  <div class="shead"><h2 class="section-title">Interactive Demos</h2></div>
+  <p class="sub">Our results, in per-part colour or with the generated texture &mdash; use the toggle. The middle row plays the exploded view, and the bottom row is the assembly standing under gravity in simulation, not a static render.</p></div>
+  <div class="segbar"><button id="texbtn" class="texbtn" type="button" aria-pressed="false"><span class="dot"></span>Texture</button></div>
+  <div class="loopwrap"><div class="loop" id="gloop" data-n="9"><article class="gcard pick" data-sid="04443dd4" role="button" tabindex="0" title="Show in the 3D viewer"><div class="gcard-h"><span class="gname">Ham hock</span><span class="pill">3 parts</span></div><div class="gcard-b"><figure><img src="assets/3e2115f1292d.jpg" alt="Input image"><figcaption>Input</figcaption></figure><figure><img class="v" data-tex="assets/dabe036cb29a.webp" data-col="assets/f26469e78feb.webp" src="assets/f26469e78feb.webp" alt="Exploded view"><figcaption>Exploded view</figcaption></figure><figure><img class="v" data-tex="assets/7e83b4bf6ac7.webp" data-col="assets/1ccecccca86b.webp" src="assets/1ccecccca86b.webp" alt="Assembled"><figcaption>Under gravity &middot; sim</figcaption></figure></div></article><article class="gcard pick" data-sid="0a10028c" role="button" tabindex="0" title="Show in the 3D viewer"><div class="gcard-h"><span class="gname">Lounge chair</span><span class="pill">8 parts</span></div><div class="gcard-b"><figure><img src="assets/49ec7aa1fd3a.jpg" alt="Input image"><figcaption>Input</figcaption></figure><figure><img class="v" data-tex="assets/f3409b498a6b.webp" data-col="assets/cd730e6d7469.webp" src="assets/cd730e6d7469.webp" alt="Exploded view"><figcaption>Exploded view</figcaption></figure><figure><img class="v" data-tex="assets/07799ac65cbf.webp" data-col="assets/e9fa64b46d5b.webp" src="assets/e9fa64b46d5b.webp" alt="Assembled"><figcaption>Under gravity &middot; sim</figcaption></figure></div></article><article class="gcard pick" data-sid="c50c3d0a" role="button" tabindex="0" title="Show in the 3D viewer"><div class="gcard-h"><span class="gname">Bronze droid</span><span class="pill">9 parts</span></div><div class="gcard-b"><figure><img src="assets/d31ca6e8dff1.jpg" alt="Input image"><figcaption>Input</figcaption></figure><figure><img class="v" data-tex="assets/6912b5193e85.webp" data-col="assets/47969a148bbd.webp" src="assets/47969a148bbd.webp" alt="Exploded view"><figcaption>Exploded view</figcaption></figure><figure><img class="v" data-tex="assets/88349d1f5d62.webp" data-col="assets/282bb054d217.webp" src="assets/282bb054d217.webp" alt="Assembled"><figcaption>Under gravity &middot; sim</figcaption></figure></div></article><article class="gcard pick" data-sid="3aae0c7c" role="button" tabindex="0" title="Show in the 3D viewer"><div class="gcard-h"><span class="gname">Headphones</span><span class="pill">14 parts</span></div><div class="gcard-b"><figure><img src="assets/69e426551063.jpg" alt="Input image"><figcaption>Input</figcaption></figure><figure><img class="v" data-tex="assets/efe1cc5b38d8.webp" data-col="assets/23be5b72073e.webp" src="assets/23be5b72073e.webp" alt="Exploded view"><figcaption>Exploded view</figcaption></figure><figure><img class="v" data-tex="assets/b2220d1e1432.webp" data-col="assets/d8104c461f92.webp" src="assets/d8104c461f92.webp" alt="Assembled"><figcaption>Under gravity &middot; sim</figcaption></figure></div></article><article class="gcard pick" data-sid="0a7a4530" role="button" tabindex="0" title="Show in the 3D viewer"><div class="gcard-h"><span class="gname">Triceratops</span><span class="pill">7 parts</span></div><div class="gcard-b"><figure><img src="assets/4f55c8119baa.png" alt="Input image"><figcaption>Input</figcaption></figure><figure><img class="v" data-tex="assets/6273ff2e0cdc.webp" data-col="assets/eedb604d438f.webp" src="assets/eedb604d438f.webp" alt="Exploded view"><figcaption>Exploded view</figcaption></figure><figure><img class="v" data-tex="assets/7a8a5d6bc608.webp" data-col="assets/727416c9baa7.webp" src="assets/727416c9baa7.webp" alt="Assembled"><figcaption>Under gravity &middot; sim</figcaption></figure></div></article><article class="gcard pick" data-sid="c5f384af" role="button" tabindex="0" title="Show in the 3D viewer"><div class="gcard-h"><span class="gname">Astronaut</span><span class="pill">10 parts</span></div><div class="gcard-b"><figure><img src="assets/457582cc4428.png" alt="Input image"><figcaption>Input</figcaption></figure><figure><img class="v" data-tex="assets/d1c9d7d0ebaa.webp" data-col="assets/ef94d302bb97.webp" src="assets/ef94d302bb97.webp" alt="Exploded view"><figcaption>Exploded view</figcaption></figure><figure><img class="v" data-tex="assets/08c8b9d37caf.webp" data-col="assets/efb31dc70e25.webp" src="assets/efb31dc70e25.webp" alt="Assembled"><figcaption>Under gravity &middot; sim</figcaption></figure></div></article><article class="gcard pick" data-sid="3adaab4d" role="button" tabindex="0" title="Show in the 3D viewer"><div class="gcard-h"><span class="gname">Water blaster</span><span class="pill">10 parts</span></div><div class="gcard-b"><figure><img src="assets/39e7bee31676.png" alt="Input image"><figcaption>Input</figcaption></figure><figure><img class="v" data-tex="assets/d3b332469f69.webp" data-col="assets/a4533122afe1.webp" src="assets/a4533122afe1.webp" alt="Exploded view"><figcaption>Exploded view</figcaption></figure><figure><img class="v" data-tex="assets/510f3582d218.webp" data-col="assets/a541a171cd21.webp" src="assets/a541a171cd21.webp" alt="Assembled"><figcaption>Under gravity &middot; sim</figcaption></figure></div></article><article class="gcard pick" data-sid="0adcbee6" role="button" tabindex="0" title="Show in the 3D viewer"><div class="gcard-h"><span class="gname">Park bench</span><span class="pill">4 parts</span></div><div class="gcard-b"><figure><img src="assets/7687cec0623d.png" alt="Input image"><figcaption>Input</figcaption></figure><figure><img class="v" data-tex="assets/3d55c568a240.webp" data-col="assets/9ee291e8e9dd.webp" src="assets/9ee291e8e9dd.webp" alt="Exploded view"><figcaption>Exploded view</figcaption></figure><figure><img class="v" data-tex="assets/ece5f1983fe3.webp" data-col="assets/e27a93fb65cd.webp" src="assets/e27a93fb65cd.webp" alt="Assembled"><figcaption>Under gravity &middot; sim</figcaption></figure></div></article><article class="gcard pick" data-sid="0ae69d0b" role="button" tabindex="0" title="Show in the 3D viewer"><div class="gcard-h"><span class="gname">Gorilla</span><span class="pill">8 parts</span></div><div class="gcard-b"><figure><img src="assets/1ecfb5ffd980.png" alt="Input image"><figcaption>Input</figcaption></figure><figure><img class="v" data-tex="assets/74227ff616ee.webp" data-col="assets/0eb1b4b92073.webp" src="assets/0eb1b4b92073.webp" alt="Exploded view"><figcaption>Exploded view</figcaption></figure><figure><img class="v" data-tex="assets/fc23a76b2f0d.webp" data-col="assets/60ee45461b70.webp" src="assets/60ee45461b70.webp" alt="Assembled"><figcaption>Under gravity &middot; sim</figcaption></figure></div></article><article class="gcard pick" data-sid="04443dd4" role="button" tabindex="0" title="Show in the 3D viewer"><div class="gcard-h"><span class="gname">Ham hock</span><span class="pill">3 parts</span></div><div class="gcard-b"><figure><img src="assets/3e2115f1292d.jpg" alt="Input image"><figcaption>Input</figcaption></figure><figure><img class="v" data-tex="assets/dabe036cb29a.webp" data-col="assets/f26469e78feb.webp" src="assets/f26469e78feb.webp" alt="Exploded view"><figcaption>Exploded view</figcaption></figure><figure><img class="v" data-tex="assets/7e83b4bf6ac7.webp" data-col="assets/1ccecccca86b.webp" src="assets/1ccecccca86b.webp" alt="Assembled"><figcaption>Under gravity &middot; sim</figcaption></figure></div></article><article class="gcard pick" data-sid="0a10028c" role="button" tabindex="0" title="Show in the 3D viewer"><div class="gcard-h"><span class="gname">Lounge chair</span><span class="pill">8 parts</span></div><div class="gcard-b"><figure><img src="assets/49ec7aa1fd3a.jpg" alt="Input image"><figcaption>Input</figcaption></figure><figure><img class="v" data-tex="assets/f3409b498a6b.webp" data-col="assets/cd730e6d7469.webp" src="assets/cd730e6d7469.webp" alt="Exploded view"><figcaption>Exploded view</figcaption></figure><figure><img class="v" data-tex="assets/07799ac65cbf.webp" data-col="assets/e9fa64b46d5b.webp" src="assets/e9fa64b46d5b.webp" alt="Assembled"><figcaption>Under gravity &middot; sim</figcaption></figure></div></article><article class="gcard pick" data-sid="c50c3d0a" role="button" tabindex="0" title="Show in the 3D viewer"><div class="gcard-h"><span class="gname">Bronze droid</span><span class="pill">9 parts</span></div><div class="gcard-b"><figure><img src="assets/d31ca6e8dff1.jpg" alt="Input image"><figcaption>Input</figcaption></figure><figure><img class="v" data-tex="assets/6912b5193e85.webp" data-col="assets/47969a148bbd.webp" src="assets/47969a148bbd.webp" alt="Exploded view"><figcaption>Exploded view</figcaption></figure><figure><img class="v" data-tex="assets/88349d1f5d62.webp" data-col="assets/282bb054d217.webp" src="assets/282bb054d217.webp" alt="Assembled"><figcaption>Under gravity &middot; sim</figcaption></figure></div></article><article class="gcard pick" data-sid="3aae0c7c" role="button" tabindex="0" title="Show in the 3D viewer"><div class="gcard-h"><span class="gname">Headphones</span><span class="pill">14 parts</span></div><div class="gcard-b"><figure><img src="assets/69e426551063.jpg" alt="Input image"><figcaption>Input</figcaption></figure><figure><img class="v" data-tex="assets/efe1cc5b38d8.webp" data-col="assets/23be5b72073e.webp" src="assets/23be5b72073e.webp" alt="Exploded view"><figcaption>Exploded view</figcaption></figure><figure><img class="v" data-tex="assets/b2220d1e1432.webp" data-col="assets/d8104c461f92.webp" src="assets/d8104c461f92.webp" alt="Assembled"><figcaption>Under gravity &middot; sim</figcaption></figure></div></article><article class="gcard pick" data-sid="0a7a4530" role="button" tabindex="0" title="Show in the 3D viewer"><div class="gcard-h"><span class="gname">Triceratops</span><span class="pill">7 parts</span></div><div class="gcard-b"><figure><img src="assets/4f55c8119baa.png" alt="Input image"><figcaption>Input</figcaption></figure><figure><img class="v" data-tex="assets/6273ff2e0cdc.webp" data-col="assets/eedb604d438f.webp" src="assets/eedb604d438f.webp" alt="Exploded view"><figcaption>Exploded view</figcaption></figure><figure><img class="v" data-tex="assets/7a8a5d6bc608.webp" data-col="assets/727416c9baa7.webp" src="assets/727416c9baa7.webp" alt="Assembled"><figcaption>Under gravity &middot; sim</figcaption></figure></div></article><article class="gcard pick" data-sid="c5f384af" role="button" tabindex="0" title="Show in the 3D viewer"><div class="gcard-h"><span class="gname">Astronaut</span><span class="pill">10 parts</span></div><div class="gcard-b"><figure><img src="assets/457582cc4428.png" alt="Input image"><figcaption>Input</figcaption></figure><figure><img class="v" data-tex="assets/d1c9d7d0ebaa.webp" data-col="assets/ef94d302bb97.webp" src="assets/ef94d302bb97.webp" alt="Exploded view"><figcaption>Exploded view</figcaption></figure><figure><img class="v" data-tex="assets/08c8b9d37caf.webp" data-col="assets/efb31dc70e25.webp" src="assets/efb31dc70e25.webp" alt="Assembled"><figcaption>Under gravity &middot; sim</figcaption></figure></div></article><article class="gcard pick" data-sid="3adaab4d" role="button" tabindex="0" title="Show in the 3D viewer"><div class="gcard-h"><span class="gname">Water blaster</span><span class="pill">10 parts</span></div><div class="gcard-b"><figure><img src="assets/39e7bee31676.png" alt="Input image"><figcaption>Input</figcaption></figure><figure><img class="v" data-tex="assets/d3b332469f69.webp" data-col="assets/a4533122afe1.webp" src="assets/a4533122afe1.webp" alt="Exploded view"><figcaption>Exploded view</figcaption></figure><figure><img class="v" data-tex="assets/510f3582d218.webp" data-col="assets/a541a171cd21.webp" src="assets/a541a171cd21.webp" alt="Assembled"><figcaption>Under gravity &middot; sim</figcaption></figure></div></article><article class="gcard pick" data-sid="0adcbee6" role="button" tabindex="0" title="Show in the 3D viewer"><div class="gcard-h"><span class="gname">Park bench</span><span class="pill">4 parts</span></div><div class="gcard-b"><figure><img src="assets/7687cec0623d.png" alt="Input image"><figcaption>Input</figcaption></figure><figure><img class="v" data-tex="assets/3d55c568a240.webp" data-col="assets/9ee291e8e9dd.webp" src="assets/9ee291e8e9dd.webp" alt="Exploded view"><figcaption>Exploded view</figcaption></figure><figure><img class="v" data-tex="assets/ece5f1983fe3.webp" data-col="assets/e27a93fb65cd.webp" src="assets/e27a93fb65cd.webp" alt="Assembled"><figcaption>Under gravity &middot; sim</figcaption></figure></div></article><article class="gcard pick" data-sid="0ae69d0b" role="button" tabindex="0" title="Show in the 3D viewer"><div class="gcard-h"><span class="gname">Gorilla</span><span class="pill">8 parts</span></div><div class="gcard-b"><figure><img src="assets/1ecfb5ffd980.png" alt="Input image"><figcaption>Input</figcaption></figure><figure><img class="v" data-tex="assets/74227ff616ee.webp" data-col="assets/0eb1b4b92073.webp" src="assets/0eb1b4b92073.webp" alt="Exploded view"><figcaption>Exploded view</figcaption></figure><figure><img class="v" data-tex="assets/fc23a76b2f0d.webp" data-col="assets/60ee45461b70.webp" src="assets/60ee45461b70.webp" alt="Assembled"><figcaption>Under gravity &middot; sim</figcaption></figure></div></article></div><button class="loopbtn prev" type="button" aria-label="Scroll left"><svg viewBox="0 0 24 24"><polyline points="15,5 8,12 15,19"/></svg></button><button class="loopbtn next" type="button" aria-label="Scroll right"><svg viewBox="0 0 24 24"><polyline points="9,5 16,12 9,19"/></svg></button></div>
+  <div class="exwrap">
+    <div class="ex-bar"><div id="ex-tabs" class="ex-tabs"></div>
+      <div class="ex-ctl">
+        <label class="ex-slide"><span>Assembled</span>
+          <input id="ex-slider" type="range" min="0" max="100" value="0" step="1"
+                 aria-label="Explode the assembly">
+          <span>Exploded</span></label>
+        <button id="ex-reset" class="ex-reset" type="button">Reset</button>
+      </div></div>
+    <div id="ex-stage" class="ex-stage"></div>
+    <div id="ex-chips" class="ex-chips"></div>
+    </div>
+  <p class="exhint">Click any object above to open it here &middot; drag to rotate &middot; scroll to zoom &middot; slider to take it apart.</p>
+  
+  
+  </section>
+
+<section id="bibtex"><div class="wrap">
+  <div class="shead">
+    <h2 class="section-title">BibTeX</h2>
+    </div>
+  
+  <div class="bibwrap">
+    <button class="bibcopy" type="button" id="bibcopy">Copy</button>
+    <pre id="bibtex-body">@misc{tuan2026physicallygrounded,
+  title  = {SNAP3D: Physically Grounded 3D Parts for Assembly from a Single Image},
+  author = {Tuan, Yu-Rou and Tsui, Hao-Tang and Ugrinovic, Nicol\'as and
+            Kitani, Kris and Ma, Xiaoxuan},
+  year   = {2026},
+  note   = {Preprint}
+}</pre>
+  </div>
+</div></section>
+
+
+
+<footer>SNAP3D &middot; Carnegie Mellon University &middot; <a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0</a></footer>
+<script>
+document.querySelectorAll('.track').forEach(function(track){
+  var id=track.id, N=track.children.length, cur=0, GAP=22;
+  var dots=[].slice.call(document.querySelectorAll('[data-dots="'+id+'"] .dot'));
+  var tabs=[].slice.call(document.querySelectorAll('[data-tabs="'+id+'"] .tab'));
+  var cnt=document.querySelector('[data-count="'+id+'"]');
+  function mark(i){ cur=i;
+    dots.forEach(function(d,k){d.classList.toggle('on',k===i);});
+    tabs.forEach(function(t,k){t.classList.toggle('on',k===i);});
+    if(cnt) cnt.textContent=(i+1)+' / '+N; }
+  function go(i){ i=Math.max(0,Math.min(N-1,i));
+    track.scrollTo({left:i*(track.firstElementChild.offsetWidth+GAP),behavior:'smooth'}); mark(i); }
+  var t=null;
+  track.addEventListener('scroll',function(){ clearTimeout(t); t=setTimeout(function(){
+    mark(Math.round(track.scrollLeft/(track.firstElementChild.offsetWidth+GAP))); },90); });
+  document.querySelectorAll('[data-nav="'+id+'"]').forEach(function(b){
+    b.onclick=function(){ go(cur+ (+b.dataset.d)); }; });
+  dots.forEach(function(d){ d.onclick=function(){ go(+d.dataset.i); }; });
+  tabs.forEach(function(x){ x.onclick=function(){ go(+x.dataset.i); }; });
+  var down=false,sx=0,sl=0;
+  track.addEventListener('pointerdown',function(e){down=true;sx=e.clientX;sl=track.scrollLeft;});
+  addEventListener('pointerup',function(){ if(!down)return; down=false;
+    go(Math.round(track.scrollLeft/(track.firstElementChild.offsetWidth+GAP))); });
+  addEventListener('pointermove',function(e){ if(down) track.scrollLeft=sl-(e.clientX-sx); });
+  mark(0);
+});
+var nb=document.getElementById('navbar');
+function navShow(){ nb.classList.toggle('scrolled', scrollY > innerHeight*0.75); }
+  addEventListener('scroll',navShow,{passive:true});
+  addEventListener('resize',navShow);
+  navShow();
+document.querySelectorAll('img.v').forEach(function(im){ if(im.dataset.col) im.src=im.dataset.col; });
+var texbtn=document.getElementById('texbtn');
+if(texbtn) texbtn.addEventListener('click',function(){
+  var on=texbtn.getAttribute('aria-pressed')!=='true';
+  texbtn.setAttribute('aria-pressed', on?'true':'false');
+  document.querySelectorAll('img.v').forEach(function(im){
+    var v=on?im.dataset.tex:im.dataset.col; if(v) im.src=v; });
+});
+
+// Scroll-driven hero reveal: while the tall hero is pinned, map scroll onto
+// --hero-enter-progress (0 -> 1). The reveal finishes within the first
+// REVEAL_FRACTION of the pinned range, then holds until the section unpins.
+(function(){
+  var hero=document.querySelector('.hero-section'); if(!hero) return;
+  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches){
+    hero.classList.add('is-static'); return; }
+  var REVEAL_FRACTION=0.6, ticking=false;
+  function update(){
+    ticking=false;
+    var total=hero.offsetHeight-window.innerHeight;
+    if(total<=0){ hero.style.setProperty('--hero-enter-progress','1'); return; }
+    var scrolled=Math.min(Math.max(-hero.getBoundingClientRect().top,0),total);
+    var p=(scrolled/total)/REVEAL_FRACTION; if(p>1) p=1;
+    hero.style.setProperty('--hero-enter-progress',p.toFixed(3));
+  }
+  function req(){ if(ticking) return; ticking=true; requestAnimationFrame(update); }
+  addEventListener('scroll',req,{passive:true});
+  addEventListener('resize',req,{passive:true});
+  update();
+})();
+</script>
+<script src="assets3d/lib/three.min.js"></script>
+<script src="assets3d/lib/GLTFLoader.js"></script>
+<script src="assets3d/lib/OrbitControls.js"></script>
+<script src="assets3d/explode.js"></script>
+<script>
+// the drop clips start frozen on the input pose; the button swaps in the animation
+(function(){
+  var b=document.getElementById('simbtn'); if(!b) return;
+  b.addEventListener('click',function(){
+    var imgs=document.querySelectorAll('img.sim[data-run]');
+    if(!b.classList.contains('on')){
+      imgs.forEach(function(im){ im.dataset.still=im.src; im.src=im.dataset.run; });
+      b.classList.add('on'); b.lastChild.nodeValue='Reset to the input pose';
+    }else{
+      imgs.forEach(function(im){ if(im.dataset.still) im.src=im.dataset.still; });
+      b.classList.remove('on'); b.lastChild.nodeValue='Run the simulation';
+    }
+  });
+})();
+
+(function(){var b=document.getElementById('bibcopy');if(!b)return;
+ b.addEventListener('click',function(){
+   var t=document.getElementById('bibtex-body').textContent;
+   navigator.clipboard.writeText(t).then(function(){
+     b.textContent='Copied'; setTimeout(function(){b.textContent='Copy';},1600);
+   }).catch(function(){ b.textContent='Select and copy'; });
+ });})();
+
+(function(){
+  var K='snap3d-theme', r=document.documentElement, b=document.getElementById('theme');
+  try{var v=localStorage.getItem(K); if(v) r.setAttribute('data-theme',v);}catch(e){}
+  if(b) b.addEventListener('click',function(){
+    var dark=r.getAttribute('data-theme')==='dark' ||
+      (!r.getAttribute('data-theme') && matchMedia('(prefers-color-scheme: dark)').matches);
+    var next=dark?'light':'dark';
+    r.setAttribute('data-theme',next);
+    try{localStorage.setItem(K,next);}catch(e){}
+  });
+  var t=document.getElementById('totop');
+  if(t){ t.addEventListener('click',function(){scrollTo({top:0,behavior:'smooth'});});
+    addEventListener('scroll',function(){ t.classList.toggle('on', scrollY>700); },{passive:true}); }
+  // the wordmark is the way home; a bare #top anchor would jump instead of ease
+  var lg=document.querySelector('a.nav-logo');
+  if(lg) lg.addEventListener('click',function(e){ e.preventDefault();
+    scrollTo({top:0,behavior:'smooth'}); history.replaceState(null,'','#top'); });
+})();
+
+(function(){
+  var links=[...document.querySelectorAll('#rail a')];
+  if(!links.length) return;
+  var secs=links.map(function(a){return document.querySelector(a.getAttribute('href'));});
+  function mark(){
+    var y=scrollY+innerHeight*0.32, hit=-1;
+    // at the bottom of the document the probe line can never reach the last
+    // section, so BibTeX was never able to light up
+    if(scrollY+innerHeight >= document.body.scrollHeight-2) hit=links.length-1;
+    else secs.forEach(function(s,i){ if(s && s.offsetTop<=y) hit=i; });
+    links.forEach(function(a,i){ a.classList.toggle('on', i===hit); });
+  }
+  var rail=document.getElementById('rail');
+  function vis(){ if(rail) rail.classList.toggle('show', scrollY>innerHeight*0.75); }
+  addEventListener('scroll',function(){mark();vis();},{passive:true});
+  addEventListener('resize',function(){mark();vis();}); mark(); vis();
+})();
+
+// clicking a column in the gallery selects that object in the 3D viewer
+(function(){
+  function sel(sid){
+    document.querySelectorAll('.gcard.pick').forEach(function(e){
+      e.classList.toggle('sel', e.dataset.sid===sid); });
+    // The viewer builds its tabs after assets3d/manifest.json lands. A click that
+    // arrives first would otherwise be dropped silently, so retry briefly.
+    var tries=0;
+    (function go(){
+      var tabs=document.querySelectorAll('#ex-tabs .ex-tab');
+      var keys=window.__exKeys||[];
+      var i=keys.indexOf(sid);
+      if(i>=0 && tabs[i]){ tabs[i].click();
+        var w=document.querySelector('.exwrap');
+        if(w) w.scrollIntoView({behavior:'smooth',block:'center'});
+        return; }
+      if(++tries<40) setTimeout(go,150);
+    })();
+  }
+  document.addEventListener('click',function(e){
+    var t=e.target.closest('.gcard.pick'); if(t) sel(t.dataset.sid); });
+  document.addEventListener('keydown',function(e){
+    if(e.key!=='Enter'&&e.key!==' ') return;
+    var t=e.target.closest && e.target.closest('.gcard.pick');
+    if(t){ e.preventDefault(); sel(t.dataset.sid); } });
+})();
+
+// Gentle section settle. CSS scroll-snap jumps the moment the wheel stops, which
+// reads as being yanked; this waits for the scroll to end, and only if a section
+// edge is close does it ease there over 420ms. Any new input cancels it.
+(function(){
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  if (innerWidth < 900) return;
+  var secs=[].slice.call(document.querySelectorAll('section'));
+  var NEAR=140, MS=420, t=null, anim=null, lock=false;
+  var nbar=document.getElementById('navbar');
+  var PAD=nbar && getComputedStyle(nbar).position==='fixed'
+          ? Math.round(nbar.getBoundingClientRect().height)+19 : 16;
+  function ease(x){ return x<0.5 ? 4*x*x*x : 1-Math.pow(-2*x+2,3)/2; }
+  function glide(to){
+    var from=scrollY, d=to-from, t0=performance.now();
+    lock=true;
+    (function step(now){
+      var k=Math.min(1,(now-t0)/MS);
+      scrollTo(0, from+d*ease(k));
+      if(k<1) anim=requestAnimationFrame(step); else { anim=null; lock=false; }
+    })(t0);
+  }
+  function settle(){
+    if(lock) return;
+    var y=scrollY, best=null, bd=NEAR;
+    // near the very top the only sensible resting place is the top itself;
+    // settling onto the hero's offsetTop instead clipped the navbar off-screen
+    if(y<NEAR){ if(y>2) glide(0); return; }
+    secs.forEach(function(s){
+      // the bar is fixed once it shows, so a section parked 16px down sits
+      // underneath it; settle where a #hash jump would land
+      var top=s.offsetTop-PAD, d=Math.abs(top-y);
+      if(d<bd && d>2){ bd=d; best=top; }
+    });
+    if(best!==null) glide(best);
+  }
+  addEventListener('scroll',function(){
+    if(anim){ cancelAnimationFrame(anim); anim=null; lock=false; }
+    clearTimeout(t); t=setTimeout(settle,150);
+  },{passive:true});
+})();
+
+// Infinite horizontal strip: the cards are rendered twice, and whenever the
+// scroll passes one full set it is rewound by exactly that width, so the loop
+// never reaches an end. Auto-advance pauses on hover, drag or wheel.
+(function(){
+  var el=document.getElementById('gloop'); if(!el) return;
+  var wrap=el.parentElement;
+  function setW(){ return el.scrollWidth/2; }
+  function wrapScroll(){
+    var half=setW();
+    if(el.scrollLeft>=half) el.scrollLeft-=half;
+    else if(el.scrollLeft<0) el.scrollLeft+=half;
+  }
+  el.addEventListener('scroll',wrapScroll,{passive:true});
+
+  // scrollLeft rounds, so adding 0.35 each frame lands back on the same integer
+  // and never moves; keep the position as a float and write it out each frame
+  var paused=false, raf=null, SPEED=0.35, pos=0;
+  function tick(){
+    if(!paused){
+      pos+=SPEED;
+      var half=setW();
+      if(half>0 && pos>=half) pos-=half;
+      el.scrollLeft=pos;
+    } else { pos=el.scrollLeft; }
+    raf=requestAnimationFrame(tick);
+  }
+  raf=requestAnimationFrame(tick);
+  ['pointerenter','focusin'].forEach(function(e){ wrap.addEventListener(e,function(){paused=true;}); });
+  ['pointerleave','focusout'].forEach(function(e){ wrap.addEventListener(e,function(){paused=false;}); });
+  document.addEventListener('visibilitychange',function(){ paused=document.hidden; });
+
+  // Drag to scrub. Capture is taken only once the pointer has actually moved:
+  // capturing on pointerdown retargets the following click to the strip itself,
+  // so the card underneath never receives it and the viewer never updated.
+  var down=false, sx=0, sl=0, moved=0, cap=null;
+  el.addEventListener('pointerdown',function(e){ down=true; moved=0; cap=null;
+    sx=e.clientX; sl=el.scrollLeft; });
+  el.addEventListener('pointermove',function(e){ if(!down) return;
+    var dx=e.clientX-sx; moved=Math.max(moved,Math.abs(dx));
+    if(moved>4 && cap===null){ cap=e.pointerId; el.setPointerCapture(cap); el.classList.add('drag'); }
+    if(cap!==null){ el.scrollLeft=sl-dx; wrapScroll(); pos=el.scrollLeft; } });
+  ['pointerup','pointercancel'].forEach(function(t){
+    el.addEventListener(t,function(e){ down=false; el.classList.remove('drag');
+      if(cap!==null){ try{el.releasePointerCapture(cap);}catch(_){} cap=null; } }); });
+  el.addEventListener('click',function(e){ if(moved>4){ e.stopPropagation(); e.preventDefault(); } },true);
+
+  function step(dir){ var card=el.querySelector('.gcard');
+    var w=card?card.getBoundingClientRect().width+16:230;
+    el.scrollBy({left:dir*w*2,behavior:'smooth'}); }
+  wrap.querySelector('.loopbtn.prev').addEventListener('click',function(){step(-1);});
+  wrap.querySelector('.loopbtn.next').addEventListener('click',function(){step(1);});
+  setTimeout(function(){ pos=el.scrollLeft; }, 400);
+})();
+</script>
+</body></html>

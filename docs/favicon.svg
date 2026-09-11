@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="SNAP3D">
+  <!-- Drawn for this project: two parts held apart by a seam and bridged by a
+       dovetail snap-fit. Original artwork, nothing to license. -->
+  <rect width="64" height="64" rx="15" fill="#6d4aff"/>
+  <g fill="#fff">
+    <rect x="11" y="11" width="42" height="17" rx="4.5"/>
+    <rect x="11" y="36" width="42" height="17" rx="4.5"/>
+    <path d="M26 26h12l5 12H21z"/>
+  </g>
+</svg>
