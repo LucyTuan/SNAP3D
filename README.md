@@ -16,7 +16,7 @@
 
 [![Project page](https://img.shields.io/badge/Project_page-6d4aff?style=for-the-badge&logo=googlechrome&logoColor=white)](https://lucytuan.github.io/SNAP3D/)
 [![Video](https://img.shields.io/badge/Video-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/22yRDaWabwA)
-[![arXiv](https://img.shields.io/badge/arXiv-coming_soon-8a8a8a?style=for-the-badge&logo=arxiv&logoColor=white)](#)
+[![arXiv](https://img.shields.io/badge/arXiv-2609.13146-B31B1B?style=for-the-badge&logo=arxiv&logoColor=white)](https://arxiv.org/abs/2609.13146)
 [![License](https://img.shields.io/badge/License-CC_BY--NC_4.0-3c7a4e?style=for-the-badge)](LICENSE)
 
 <img src="assets/teaser.jpg" width="100%" alt="From a single image to printed, assembled parts">
@@ -78,11 +78,13 @@ under gravity.
 
 ```bibtex
 @misc{tuan2026physicallygrounded,
-  title  = {SNAP3D: Physically Grounded 3D Parts for Assembly from a Single Image},
-  author = {Tuan, Yu-Rou and Tsui, Hao-Tang and Ugrinovic, Nicol\'as and
-            Kitani, Kris and Ma, Xiaoxuan},
-  year   = {2026},
-  note   = {Preprint}
+  title         = {SNAP3D: Physically Grounded 3D Parts for Assembly from a Single Image},
+  author        = {Tuan, Yu-Rou and Tsui, Hao-Tang and Ugrinovic, Nicol\'as and
+                   Kitani, Kris and Ma, Xiaoxuan},
+  year          = {2026},
+  eprint        = {2609.13146},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.GR}
 }
 ```
 
